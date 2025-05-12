@@ -1,9 +1,10 @@
 import os
-from typing import Optional, Any
-from loguru import logger
+from typing import Any, Optional
+
 from azure.core.exceptions import ResourceExistsError
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient
+from loguru import logger
 
 
 def setup_blob_service_client(
@@ -64,7 +65,7 @@ def upload_directory_to_container(
     the folder structure under `blob_prefix`.
 
     Args:
-        directory_path (str): Local folder to upload.
+        directory_path  (str): Local folder to upload.
         container_name  (str): Name of your blob container (must exist).
         blob_service    (BlobServiceClient): from setup_blob_service_client().
         blob_prefix     (str): “folder” path in the container.
