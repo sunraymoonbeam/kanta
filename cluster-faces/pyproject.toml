@@ -1,0 +1,22 @@
+[project]
+name = "cluster-faces"
+version = "0.1.0"
+description = "A Python package for clustering facial data using machine learning techniques."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncpg>=0.30.0",
+    "chinese-whispers>=0.9.0",
+    "fastparquet>=2024.11.0",
+    "ipykernel>=6.29.5",
+    "loguru>=0.7.3",
+    "matplotlib>=3.10.1",
+    "networkx>=3.4.2",
+    "pandas>=2.2.3",
+    "pyarrow>=20.0.0",
+    "python-dotenv>=1.1.0",
+    "requests>=2.32.3",
+    "scikit-learn>=1.6.1",
+    "sqlalchemy>=2.0.41",
+    "tqdm>=4.67.1",
+]
