@@ -125,7 +125,7 @@ async def main():
             normalized_embeddings = normalize(embeddings_array)
 
             # Perform DBSCAN clustering
-            dbscan = DBSCAN(eps=0.5, min_samples=5, metric='euclidean', n_jobs=-1)
+            dbscan = DBSCAN(eps=0.3, min_samples=5, metric='euclidean', n_jobs=-1)
             cluster_labels = dbscan.fit_predict(normalized_embeddings)
             logger.info(f"Clustering completed for event: {event_id}. Labels: {cluster_labels}")
 
