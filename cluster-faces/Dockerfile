@@ -29,4 +29,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Ensure the installed binary is on the `PATH`
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["fastapi", "dev", "--host", "0.0.0.0", "src/app/main.py"]
+CMD ["uv", "run", "main.py"]

@@ -15,7 +15,6 @@ dependencies = [
     "jwt>=1.3.1",
     "loguru>=0.7.3",
     "pgvector>=0.4.1",
-    "psycopg2>=2.9.10",
     "pydantic>=2.11.3",
     "pydantic-settings>=2.9.1",
     "pytest>=8.3.5",
