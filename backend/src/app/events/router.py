@@ -152,7 +152,7 @@ async def delete_event_endpoint(
         HTTPException 404: If no event with the given code is found.
     """
     try:
-        await delete_event(db, payload.code)
+        await delete_event(db, payload.event_code)
     except EventNotFound as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

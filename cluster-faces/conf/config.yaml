@@ -1,0 +1,75 @@
+# conf/config.yaml
+# Configuration for clustering face embeddings using Hydra.
+
+algo: hdbscan #[hdbscan, dbscan, optics, affinity_propagation, chinese_whispers, agglomerative, birch]
+processing_method: normalize # [none, normalize, pca, umap]
+
+# --------------------------------------------------------------------
+# High‐Performance Algorithms
+# --------------------------------------------------------------------
+hdbscan:
+  min_cluster_size: 5 # Smallest size grouping for clusters (granularity)
+  cluster_selection_method: leaf  # Method to select clusters: 'eom' (excess of mass) or 'leaf'
+  cluster_selection_epsilon: 0.0 # Extra tolerance for cluster selection (0.0 = strict)
+  alpha: 1.0 # Stability parameter (1.0 = default)
+  metric: euclidean # Distance metric: 'euclidean', 'cosine', etc.
+
+# Read more about parameters at https://hdbscan.readthedocs.io/en/latest/parameter_selection.html
+
+affinity_propagation: #does not work well with umap
+  damping: 0.5 # Damping factor for convergence (0.5–1.0)
+  max_iter: 200 # Max iterations for convergence (200 = default)
+  convergence_iter: 15 # Iterations for convergence check (15 = default)
+
+optics:
+  min_samples: 5 # Min samples for core point
+  xi: 0.05 # Stability threshold (e.g. 0.05)
+  min_cluster_size: 5 # Smallest cluster size
+  metric: euclidean # Distance metric: 'euclidean', 'cosine', etc.
+
+
+# --------------------------------------------------------------------
+# Medium‐Performance Algorithms
+# --------------------------------------------------------------------
+chinese_whispers:
+  threshold: 0.45 # Distance threshold to connect nodes
+  weighting: top # Weighting scheme for label propagation: 'top', 'bottom', etc.
+
+dbscan:
+  eps: 0.35 # Max distance for neighborhood (sensitive)
+  min_samples: 5 # Min samples to form a core point
+  metric: euclidean # Distance metric: 'euclidean', 'cosine', etc. COSINE DOES NOT WORK WELL
+  n_jobs: -1 # Parallel jobs (-1 = all cores)
+
+# --------------------------------------------------------------------
+# Lower‐Performance Algorithms
+# Works well with UMAP dimensionality reduction though!!!
+# --------------------------------------------------------------------
+agglomerative:
+  n_clusters: null # Number of clusters (null to use distance_threshold)
+  distance_threshold: 0.9 # Distance threshold for merging
+  linkage: single # Linkage: 'ward', 'complete', 'average', 'single'
+  metric: euclidean # Distance metric: 'euclidean', 'cosine', etc.
+
+birch:
+  n_clusters: null # Number of clusters (null = auto)
+  threshold: 0.5 # Radius for subcluster creation
+  branching_factor: 50 # Max subclusters per node
+  
+
+# --------------------------------------------------------------------
+# Preprocessing parameters
+# PCA (used if processing_method == 'pca')
+pca:
+  n_components: 30
+  whiten: false 
+  random_state: 42
+
+# UMAP (used if processing_method == 'umap')
+# https://umap-learn.readthedocs.io/en/latest/parameters.html
+umap:
+  n_components: 30         
+  n_neighbors: 15
+  min_dist: 0.1
+  metric: euclidean
+  random_state: 42
