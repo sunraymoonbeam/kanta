@@ -1,9 +1,14 @@
+import os
+from typing import Any, Dict, List, Optional, Tuple
+
 import requests
 import streamlit as st
-from typing import Dict, Any, Tuple, List, Optional
 
-# API Configuration
-API_BASE_URL = "http://localhost:8000"  # Adjust if your backend API is on a different URL
+# API Configuration, adjust if your backend API is on a different URL
+API_BASE_URL = os.getenv(
+    "BACKEND_SERVER_URL", "http://backend:8000"
+)
+
 
 def get_events():
     """
@@ -20,6 +25,7 @@ def get_events():
         st.error(f"API connection error: {str(e)}")
         return []
 
+
 def upload_image(event_code: str, image_file):
     """
     Upload an image to the API
@@ -27,16 +33,19 @@ def upload_image(event_code: str, image_file):
     try:
         files = {"image": (image_file.name, image_file, "image/jpeg")}
         response = requests.post(
-            f"{API_BASE_URL}/pics?event_code={event_code}",
-            files=files
+            f"{API_BASE_URL}/pics?event_code={event_code}", files=files
         )
-        
+
         if response.status_code == 201:
             return response.json(), True
         else:
-            return f"Error uploading image: {response.status_code} - {response.text}", False
+            return (
+                f"Error uploading image: {response.status_code} - {response.text}",
+                False,
+            )
     except Exception as e:
         return f"API connection error: {str(e)}", False
+
 
 def get_images(event_code: str, limit: int = 50, offset: int = 0, **filter_params):
     """
@@ -48,17 +57,21 @@ def get_images(event_code: str, limit: int = 50, offset: int = 0, **filter_param
             "event_code": event_code,
             "limit": limit,
             "offset": offset,
-            **{k: v for k, v in filter_params.items() if v is not None}
+            **{k: v for k, v in filter_params.items() if v is not None},
         }
-        
+
         response = requests.get(f"{API_BASE_URL}/pics", params=params)
-        
+
         if response.status_code == 200:
             return response.json(), True
         else:
-            return f"Error fetching images: {response.status_code} - {response.text}", False
+            return (
+                f"Error fetching images: {response.status_code} - {response.text}",
+                False,
+            )
     except Exception as e:
         return f"API connection error: {str(e)}", False
+
 
 def get_image_detail(image_uuid: str):
     """
@@ -66,7 +79,7 @@ def get_image_detail(image_uuid: str):
     """
     try:
         response = requests.get(f"{API_BASE_URL}/pics/{image_uuid}")
-        
+
         if response.status_code == 200:
             return response.json(), True
         else:
@@ -74,21 +87,22 @@ def get_image_detail(image_uuid: str):
     except Exception as e:
         return f"API connection error: {str(e)}", False
 
+
 def get_clusters(event_code: str, sample_size: int = 5):
     """
     Fetch cluster information for an event
     """
     try:
-        params = {
-            "event_code": event_code,
-            "sample_size": sample_size
-        }
-        
+        params = {"event_code": event_code, "sample_size": sample_size}
+
         response = requests.get(f"{API_BASE_URL}/clusters", params=params)
-        
+
         if response.status_code == 200:
             return response.json(), True
         else:
-            return f"Error fetching clusters: {response.status_code} - {response.text}", False
+            return (
+                f"Error fetching clusters: {response.status_code} - {response.text}",
+                False,
+            )
     except Exception as e:
         return f"API connection error: {str(e)}", False

@@ -1,11 +1,7 @@
 import streamlit as st
-from utils.session import init_session_state, get_event_selection
+from utils.session import get_event_selection, init_session_state
 
-st.set_page_config(
-    page_title="Kanta Face Recognition",
-    page_icon="👥",
-    layout="wide"
-)
+st.set_page_config(page_title="Kanta Face Recognition", page_icon="👥", layout="wide")
 
 # Initialize session state
 init_session_state()

@@ -6,13 +6,13 @@
 from contextlib import asynccontextmanager
 
 import uvicorn
-from app.db.base import Base, engine  # SQLAlchemy engine & metadata
 from fastapi import FastAPI
 from loguru import logger
 
 from app.clusters.router import router as clusters_router
 from app.core.azure_blob import get_blob_service  # ensures Blob client is initialized
 from app.core.config import get_settings
+from app.db.base import Base, engine  # SQLAlchemy engine & metadata
 from app.events.router import router as events_router
 from app.images.router import router as images_router
 

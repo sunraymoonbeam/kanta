@@ -11,7 +11,6 @@ from typing import List
 
 import pytest
 import pytest_asyncio
-
 from src.db.database_orm import ORMDatabase
 
 EVENT_CODE = "testevt"  # each test runs inside this temporary event

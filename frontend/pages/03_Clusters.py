@@ -1,6 +1,6 @@
 import streamlit as st
 from utils.api import get_clusters
-from utils.session import init_session_state, get_event_selection
+from utils.session import get_event_selection, init_session_state
 
 # Initialize session and sidebar
 init_session_state()
@@ -23,30 +23,34 @@ if success:
     if not clusters:
         st.info("No clusters found for this event.")
         st.stop()
-        
+
     # Display each cluster
     for cluster in clusters:
-        with st.expander(f"Cluster {cluster['cluster_id']} - {cluster['face_count']} faces"):
+        with st.expander(
+            f"Cluster {cluster['cluster_id']} - {cluster['face_count']} faces"
+        ):
             st.write(f"**Cluster ID:** {cluster['cluster_id']}")
             st.write(f"**Face Count:** {cluster['face_count']}")
-            
+
             # Show sample faces in grid
-            if cluster['samples']:
+            if cluster["samples"]:
                 st.subheader("Sample Faces")
-                cols = st.columns(min(5, len(cluster['samples'])))
-                
-                for i, sample in enumerate(cluster['samples']):
+                cols = st.columns(min(5, len(cluster["samples"])))
+
+                for i, sample in enumerate(cluster["samples"]):
                     with cols[i % len(cols)]:
-                        st.image(sample['sample_blob_url'], use_container_width=True)
+                        st.image(sample["sample_blob_url"], use_container_width=True)
                         st.caption(f"Face ID: {sample['face_id']}")
-            
+
             # Button to view all images with faces in this cluster
-            if st.button(f"View All Images", key=f"view_cluster_{cluster['cluster_id']}"):
+            if st.button(
+                f"View All Images", key=f"view_cluster_{cluster['cluster_id']}"
+            ):
                 # Set up a filter in the session state and redirect to images page
                 st.session_state.last_filter = {
                     "limit": 50,
                     "offset": 0,
-                    "cluster_list_id": [cluster['cluster_id']]
+                    "cluster_list_id": [cluster["cluster_id"]],
                 }
                 st.switch_page("pages/02_Browse.py")
 else:

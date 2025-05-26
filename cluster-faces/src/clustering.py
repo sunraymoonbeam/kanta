@@ -165,14 +165,24 @@ def chinese_whispers_cluster(
     try:
         n = len(embeddings)
         data = embeddings
+
+        # Build graph
         G = nx.Graph()
+
+        # Add nodes
         G.add_nodes_from(range(n))
+
+        # Add edges based on distance threshold
         for i in range(n):
             for j in range(i + 1, n):
                 dist = euclidean(data[i], data[j])
                 if dist < threshold:
                     G.add_edge(i, j, weight=1.0 / (1.0 + dist))
+
+        # Apply Chinese Whispers algorithm
         chinese_whispers.chinese_whispers(G, weighting=weighting)
+
+        # Extract labels and preprocess them
         raw = np.array([G.nodes[i]["label"] for i in range(n)])
         unique = np.unique(raw)
         label_map = {lab: idx for idx, lab in enumerate(unique)}

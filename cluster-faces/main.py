@@ -16,8 +16,6 @@ from sklearn.preprocessing import normalize
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from tqdm.asyncio import tqdm
-
 from src.clustering import (
     affinity_propagation_cluster,
     agglomerative_cluster,
@@ -28,6 +26,7 @@ from src.clustering import (
     optics_cluster,
 )
 from src.processing import process_pca, process_umap
+from tqdm.asyncio import tqdm
 
 # Load environment variables
 load_dotenv()
