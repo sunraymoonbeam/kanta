@@ -234,6 +234,14 @@ def main(cfg: DictConfig) -> None:
     """Hydra main entry point."""
     asyncio.run(run(cfg))
 
+# AWS Lambda handler
+def handler(event, context):
+    # read in config file
+    config_path = os.getenv('CONFIG_PATH', 'conf/config.yaml')
+    cfg = OmegaConf.load(config_path)
+
+    # run the clustering process
+    asyncio.run(run(cfg))
 
 if __name__ == "__main__":
     main()

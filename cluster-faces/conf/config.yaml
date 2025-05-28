@@ -73,3 +73,13 @@ umap:
   min_dist: 0.1
   metric: euclidean
   random_state: 42
+
+defaults:  
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled  
+  
+hydra:  
+  output_subdir: null  
+  run:  
+    dir: .
