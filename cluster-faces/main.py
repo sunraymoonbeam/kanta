@@ -235,13 +235,13 @@ def main(cfg: DictConfig) -> None:
     asyncio.run(run(cfg))
 
 # AWS Lambda handler
-def handler(event, context):
-    # read in config file
+async def handler_async(event, context):
     config_path = os.getenv('CONFIG_PATH', 'conf/config.yaml')
     cfg = OmegaConf.load(config_path)
+    await run(cfg)
 
-    # run the clustering process
-    asyncio.run(run(cfg))
+def handler(event, context):
+    return asyncio.get_event_loop().run_until_complete(handler_async(event, context))
 
 if __name__ == "__main__":
     main()
