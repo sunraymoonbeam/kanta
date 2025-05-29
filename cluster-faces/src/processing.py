@@ -2,7 +2,6 @@
 """Preprocessing utilities for face embeddings."""
 
 import logging
-from typing import Any
 
 import numpy as np
 import umap.umap_ as umap_module

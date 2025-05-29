@@ -11,7 +11,7 @@ import hydra
 import numpy as np
 from dotenv import load_dotenv
 from loguru import logger
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from sklearn.preprocessing import normalize
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine

@@ -1,7 +1,7 @@
 # src/clustering.py
 """Clustering algorithms and preprocessing for face embeddings."""
 
-from typing import Any, Optional
+from typing import Optional
 
 import chinese_whispers
 import hdbscan

@@ -64,7 +64,7 @@ def get_event_container(
     container_name = event_code.lower()
     container = blob_service.get_container_client(container_name)
     try:
-        container.create_container()
+        container.create_container(public_access="blob")  # public access to blobs
         logger.info(f"Created new container: {container_name}")
     except ResourceExistsError:
         logger.debug(f"Container already exists: {container_name}")

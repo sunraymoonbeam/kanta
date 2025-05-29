@@ -1,5 +1,7 @@
 import streamlit as st
 
+from utils.api import get_events
+
 
 def init_session_state():
     """Initialize session state variables if they don't exist"""
@@ -12,10 +14,8 @@ def init_session_state():
 
 def get_event_selection():
     """Common event selection widget for sidebar"""
-    from utils.api import get_events
-
     st.sidebar.title("Kanta")
-    st.sidebar.subheader("Face Recognition System")
+    st.sidebar.subheader("Collaborative Event Photos")
 
     # Event selection
     available_events = get_events()
@@ -33,9 +33,7 @@ def get_event_selection():
     )
 
     # Manual event code entry (for testing or if get_events fails)
-    manual_event = st.sidebar.text_input(
-        "Or enter event code manually:", value=st.session_state.event_code
-    )
+    manual_event = st.sidebar.text_input("Or enter event code manually:")
 
     # Update event code in session state
     if selected_event:
@@ -47,6 +45,6 @@ def get_event_selection():
     if st.session_state.event_code:
         st.sidebar.success(f"Current event: {st.session_state.event_code}")
     else:
-        st.sidebar.error("Please select an event")
+        st.sidebar.warning("Please select an event")
 
     st.sidebar.divider()
