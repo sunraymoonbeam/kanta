@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import List, Optional
 
+
 from azure.storage.blob import ContainerClient
 from fastapi import (
     APIRouter,
     Depends,
     File,
+    Path,
     Query,
     UploadFile,
     status,
@@ -129,13 +131,13 @@ async def get_one(
 # CREATE IMAGES
 # --------------------------------------------------------------------
 @router.post(
-    "",
+    "/{event_code}",
     response_model=UploadImageResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Upload an image, detect faces, store in Azure + DB",
 )
 async def upload(
-    event_code: str = Query(
+    event_code: str = Path(
         ...,
         pattern=r"^[a-zA-Z0-9_]+$",
         description="Event code to associate with this image",

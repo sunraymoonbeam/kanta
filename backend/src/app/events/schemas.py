@@ -45,6 +45,7 @@ class UpdateEventInput(BaseModel):
 
     Attributes:
         event_code (str): Unique code of the event to update.
+        new_event_code (Optional[str]): New unique code for the event.
         name (Optional[str]): New name for the event.
         description (Optional[str]): New description for the event.
         start_date_time (Optional[datetime]): Updated start timestamp.
@@ -52,6 +53,11 @@ class UpdateEventInput(BaseModel):
     """
 
     event_code: str = Field(..., description="Unique code of the event to update.")
+    new_event_code: Optional[str] = Field(
+        None,
+        example="new_shirashafiq26",
+        description="New unique code for the event (if changing).",
+    )
     name: Optional[str] = Field(None, example="Updated Wedding Name")
     description: Optional[str] = Field(
         None, example="Updated description of the event."
@@ -95,6 +101,8 @@ class EventInfo(BaseModel):
         end_date_time (Optional[datetime]): End time (UTC).
         created_at (datetime): Event creation time.
         running (bool): Whether the event is currently ongoing.
+        event_image_url (Optional[str]): Base64-encoded image of the event.
+        qr_code_image_url (Optional[str]): Base64-encoded QR code image for the event.
     """
 
     code: str
@@ -104,6 +112,10 @@ class EventInfo(BaseModel):
     end_date_time: Optional[datetime]
     created_at: datetime
     running: bool
+
+    # New fields: Base64-encoded strings or URLs
+    event_image_url: Optional[str] = None
+    qr_code_image_url: Optional[str] = None
 
     class Config:
         from_attributes = True

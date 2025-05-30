@@ -15,6 +15,7 @@ from app.core.config import get_settings
 from app.db.base import Base, engine  # SQLAlchemy engine & metadata
 from app.events.router import router as events_router
 from app.images.router import router as images_router
+from app.system.router import router as system_router
 
 # from app.auth.router import router as auth_router
 
@@ -57,6 +58,7 @@ app = FastAPI(
 app.include_router(events_router)
 app.include_router(images_router)
 app.include_router(clusters_router)
+app.include_router(system_router)
 # app.include_router(auth_router)
 
 

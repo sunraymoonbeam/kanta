@@ -1,5 +1,4 @@
 import json
-import re
 import uuid
 from datetime import datetime
 from io import BytesIO
@@ -172,8 +171,7 @@ async def upload_image(
     event = await get_event(db, event_code)
     uid = uuid.uuid4().hex
     ext = (upload_file.filename or "upload").rsplit(".", 1)[-1].lower()
-    sanitized = re.sub(r"[^a-z0-9]", "_", event_code.lower())
-    blob_name = f"{sanitized}/{uid}.{ext}"
+    blob_name = f"images/{uid}.{ext}"
 
     # 4) upload to Azure
     try:

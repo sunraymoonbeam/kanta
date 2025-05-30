@@ -39,6 +39,20 @@ class Event(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
+    # Ren Hwa: this made life a little hard. Even though we can store images in the database,
+    # it is not recommended for large files. Instead, we should store images in a blob storage
+    # GET methods are also a little easier to implement if we store the image as a URL rather than a binary blob.
+    # New columns: binary blobs
+    # event_image = Column(LargeBinary, nullable=True)
+    # qr_code_image = Column(LargeBinary, nullable=True)
+
+    event_image_url = Column(
+        String(256), nullable=True, doc="URL of the event image in blob storage"
+    )
+    qr_code_image_url = Column(
+        String(256), nullable=True, doc="URL of the QR code image in blob storage"
+    )
+
     images = relationship(
         "Image", back_populates="event", cascade="all, delete-orphan", lazy="selectin"
     )

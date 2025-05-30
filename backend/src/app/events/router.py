@@ -1,8 +1,19 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from azure.storage.blob import BlobServiceClient, ContainerClient
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Path,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..core.azure_blob import get_blob_service, get_event_container
 from ..db.base import get_db
 from .exceptions import EventAlreadyExists, EventNotFound
 from .schemas import (
@@ -17,6 +28,7 @@ from .service import (
     delete_event,
     get_events,
     update_event,
+    upsert_event_image,
 )
 
 router = APIRouter(prefix="/events", tags=["events"])
@@ -30,7 +42,7 @@ router = APIRouter(prefix="/events", tags=["events"])
     response_model=EventListResponse,
     summary="List events (optionally filter by code & running status)",
 )
-async def list_events(
+async def get_events_endpoint(
     event_code: Optional[str] = Query(
         None,
         pattern=r"^[a-zA-Z0-9_]+$",
@@ -53,8 +65,15 @@ async def list_events(
     Returns:
         EventListResponse: Wrapper containing a list of EventInfo objects under the key 'events'.
     """
-    events = await get_events(db, event_code=event_code, running=running)
-    return EventListResponse(events=events)
+    try:
+        events = await get_events(db, event_code=event_code, running=running)
+        return EventListResponse(events=events)
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
 
 
 # --------------------------------------------------------------------
@@ -64,32 +83,31 @@ async def list_events(
     "",
     response_model=EventInfo,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new event",
+    summary="Create a new event (with optional image)",
 )
 async def create_event_endpoint(
+    *,
     payload: CreateEventInput,
     db: AsyncSession = Depends(get_db),
+    blob_service: BlobServiceClient = Depends(get_blob_service),
 ) -> EventInfo:
     """
-    Create a new event in the system.
-
-    Args:
-        payload (CreateEventInput): Input data including code, name, description, and timestamps.
-        db (AsyncSession): Async SQLAlchemy session for database access.
-
-    Returns:
-        EventInfo: Details of the newly created event.
-
-    Raises:
-        HTTPException 400: If an event with the same code already exists.
+    Create an Event, optionally uploading an image.
+    Generates a QR code pointing to `/events/{code}`.
     """
     try:
-        event = await create_event(db, payload)
+        event = await create_event(db, payload, blob_service)
     except EventAlreadyExists as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
+
     return event
 
 
@@ -105,6 +123,7 @@ async def create_event_endpoint(
 async def update_event_endpoint(
     payload: UpdateEventInput,
     db: AsyncSession = Depends(get_db),
+    blob_service: BlobServiceClient = Depends(get_blob_service),
 ) -> EventInfo:
     """
     Update fields of an existing event identified by its code.
@@ -120,12 +139,41 @@ async def update_event_endpoint(
         HTTPException 404: If no event with the given code is found.
     """
     try:
-        event = await update_event(db, payload)
+        event = await update_event(db, payload, blob_service)
     except EventNotFound as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
         )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
+    return event
+
+
+@router.put(
+    "/image/{event_code}",
+    response_model=EventInfo,
+    status_code=status.HTTP_200_OK,
+    summary="Upload or replace an event's image",
+)
+async def upsert_event_image_endpoint(
+    event_code: str = Path(..., description="Event code whose image to set"),
+    image_file: UploadFile = File(..., description="Image file (jpg/png)"),
+    db: AsyncSession = Depends(get_db),
+    container: ContainerClient = Depends(get_event_container),
+) -> EventInfo:
+    """
+    Idempotently upload or overwrite the image for an existing event
+    into the container under `assets/event_image.<ext>`.
+    Returns 404 if the event code doesn’t exist.
+    """
+    try:
+        event = await upsert_event_image(db, event_code, image_file, container)
+    except EventNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
     return event
 
 
@@ -140,6 +188,7 @@ async def update_event_endpoint(
 async def delete_event_endpoint(
     payload: DeleteEventInput,
     db: AsyncSession = Depends(get_db),
+    blob_service: BlobServiceClient = Depends(get_blob_service),
 ) -> None:
     """
     Delete an event and all its associated images and faces.
@@ -152,9 +201,14 @@ async def delete_event_endpoint(
         HTTPException 404: If no event with the given code is found.
     """
     try:
-        await delete_event(db, payload.event_code)
+        await delete_event(db, payload.event_code, blob_service)
     except EventNotFound as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         )

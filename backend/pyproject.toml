@@ -20,6 +20,7 @@ dependencies = [
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
     "pytest-dotenv>=0.5.2",
+    "qrcode>=8.2",
     "setuptools>=79.0.1",
     "sqlalchemy>=2.0.40",
     "uvicorn>=0.34.2",

@@ -1,134 +1,165 @@
-from datetime import date, datetime, time
+import io
+import requests
+from datetime import date, datetime, time as t
 
 import streamlit as st
-from requests import HTTPError
-from utils.api import create_event, get_events, update_event
+
+from utils.api import (
+    create_event,
+    get_events,
+    update_event,
+    upload_event_image,
+)
 from utils.session import get_event_selection, init_session_state
 
 # Page Configuration
-st.set_page_config(page_title="Events", page_icon="🎭", layout="wide")
+st.set_page_config(page_title="Events Manager", page_icon="🎭", layout="wide")
 
 
 def main() -> None:
-    """
-    Render the Events management UI with two tabs:
-      1. Current Event: view & edit an existing event
-      2. Create New Event
-    """
     # Session State Initialization
     init_session_state()
     get_event_selection()
     ss = st.session_state
     ss.setdefault("edit_mode", False)
+    ss.setdefault("just_created", False)
 
     st.title("Events")
-    st.markdown(
-        "Manage your events and create a collaborative photo album for participants."
-    )
+    st.markdown("Manage your events and maintain a collaborative photo album.")
+
     tab_current, tab_create = st.tabs(["Current Event", "Create New Event"])
 
-    # --------------------------------------------------------------------
-    # Tab 1: Current Event
-    # --------------------------------------------------------------------
+    # ─── Current Event Tab ─────────────────────────────────
     with tab_current:
-        st.subheader("Current Event Details")
         if not ss.get("event_code"):
-            st.warning("Please select or create an event first.")
+            st.warning(
+                "Select or create an event first to view or edit existing events."
+            )
         else:
-            try:
-                event = get_events(event_code=ss.event_code)[0]
-            except HTTPError as err:
-                st.error(f"Error fetching event: {err}")
-                return
-            except Exception as err:
-                st.error(f"Unexpected error: {err}")
-                return
+            code = ss.event_code
+            event = get_events(event_code=code)[0]
+            # Handle nullable image_url
+            image_url = event.get("event_image_url") or None
+            qr_url = event.get("qr_code_image_url") or None
 
-            # Original values
-            orig = {
-                "name": event.get("name") or "",
-                "desc": event.get("description") or "",
-                "start": event.get("start_date_time", "").rstrip("Z"),
-                "end": event.get("end_date_time", "").rstrip("Z"),
-            }
+            col1, col2 = st.columns([3, 2], gap="medium")
+            with col1:
+                img_data = None
+                if image_url:
+                    try:
+                        resp = requests.get(image_url)
+                        resp.raise_for_status()
+                        img_data = resp.content
+                    except Exception:
+                        pass
+                # Display event image or blank if none
+                if img_data:
+                    st.image(
+                        img_data,
+                        caption=event.get("name") or code,
+                        use_container_width=True,
+                    )
+                else:
+                    st.empty()
 
-            # Parse to datetime for defaults
-            start_dt = datetime.fromisoformat(orig["start"]) if orig["start"] else None
-            end_dt = datetime.fromisoformat(orig["end"]) if orig["end"] else None
+                with st.expander("Change Event Image"):
+                    with st.form("upload_image_form", clear_on_submit=True):
+                        uploaded = st.file_uploader(
+                            "Select new event image", type=["jpg", "jpeg", "png"]
+                        )
+                        if st.form_submit_button("Upload"):
+                            if not uploaded:
+                                st.warning("Please select a file first.")
+                            else:
+                                buf = io.BytesIO(uploaded.getvalue())
+                                buf.name = uploaded.name
+                                try:
+                                    upload_event_image(event_code=code, image_file=buf)
+                                    st.success("Image updated!")
+                                    st.rerun()
+                                except requests.HTTPError as err:
+                                    detail = err.response.text or str(err)
+                                    st.error(
+                                        f"Upload failed ({err.response.status_code}): {detail}"
+                                    )
+                                except Exception as e:
+                                    st.error(f"Unexpected error: {e}")
+            with col2:
+                if qr_url:
+                    st.subheader("Event QR Code")
+                    qr_data = None
+                    try:
+                        qr_resp = requests.get(qr_url)
+                        qr_resp.raise_for_status()
+                        qr_data = qr_resp.content
+                    except Exception:
+                        pass
+                    if qr_data:
+                        st.image(qr_data, width=300)
+                        st.download_button(
+                            "Download QR Code",
+                            data=qr_data,
+                            file_name=f"{code}_qr.png",
+                            mime="image/png",
+                        )
+                    else:
+                        st.empty()
 
+            st.markdown("---")
+            st.header("Event Details")
             with st.form("event_form"):
-                st.text_input("Event Code", value=event["code"], disabled=True)
-                name = (
-                    st.text_input(
-                        "Event Name",
-                        value=orig["name"],
-                        disabled=not ss.edit_mode,
-                    )
-                    or ""
-                ).strip()
-                desc = (
-                    st.text_area(
-                        "Description",
-                        value=orig["desc"],
-                        disabled=not ss.edit_mode,
-                    )
-                    or ""
-                ).strip()
-
-                cols = st.columns(4)
-                d0 = cols[0].date_input(
+                name = st.text_input(
+                    "Name", value=event.get("name") or "", disabled=not ss.edit_mode
+                )
+                desc = st.text_area(
+                    "Description",
+                    value=event.get("description") or "",
+                    disabled=not ss.edit_mode,
+                )
+                c1, c2 = st.columns(2)
+                start_date = c1.date_input(
                     "Start Date",
-                    value=start_dt.date() if start_dt else date.today(),
+                    value=date.fromisoformat(event["start_date_time"][:10]),
                     disabled=not ss.edit_mode,
                 )
-                t0 = cols[1].time_input(
+                start_time = c2.time_input(
                     "Start Time",
-                    value=start_dt.time() if start_dt else time(9, 0),
-                    step=1800,
+                    value=datetime.fromisoformat(event["start_date_time"]).time(),
                     disabled=not ss.edit_mode,
                 )
-                d1 = cols[2].date_input(
+                c3, c4 = st.columns(2)
+                end_date = c3.date_input(
                     "End Date",
-                    value=end_dt.date() if end_dt else date.today(),
+                    value=date.fromisoformat(event["end_date_time"][:10]),
                     disabled=not ss.edit_mode,
                 )
-                t1 = cols[3].time_input(
+                end_time = c4.time_input(
                     "End Time",
-                    value=end_dt.time() if end_dt else time(17, 0),
-                    step=1800,
+                    value=datetime.fromisoformat(event["end_date_time"]).time(),
                     disabled=not ss.edit_mode,
                 )
-
                 if ss.edit_mode:
-                    save, cancel = st.columns(2)
-                    if save.form_submit_button("💾 Save"):
-                        new = {
-                            "name": name,
-                            "desc": desc,
-                            "start": datetime.combine(d0, t0).isoformat(),
-                            "end": datetime.combine(d1, t1).isoformat(),
-                        }
-                        if new == orig:
-                            st.info("No changes detected.")
-                        else:
-                            try:
-                                update_event(
-                                    event_code=event["code"],
-                                    name=new["name"] or None,
-                                    description=new["desc"] or None,
-                                    start_date_time=datetime.fromisoformat(
-                                        new["start"]
-                                    ),
-                                    end_date_time=datetime.fromisoformat(new["end"]),
-                                )
-                                st.success("Event updated!")
-                                ss.edit_mode = False
-                                st.rerun()
-                            except HTTPError as err:
-                                st.error(f"Update failed: {err}")
-                            except Exception as err:
-                                st.error(f"Unexpected error: {err}")
-                    if cancel.form_submit_button("✖️ Cancel"):
+                    b1, b2 = st.columns(2)
+                    if b1.form_submit_button("Save Changes"):
+                        try:
+                            update_event(
+                                event_code=code,
+                                name=name or None,
+                                description=desc or None,
+                                start_date_time=datetime.combine(
+                                    start_date, start_time
+                                ),
+                                end_date_time=datetime.combine(end_date, end_time),
+                            )
+                            st.success("Event updated!")
+                            ss.edit_mode = False
+                            st.rerun()
+                        except requests.HTTPError as err:
+                            detail = err.response.text or str(err)
+                            st.error(
+                                f"Update failed ({err.response.status_code}): {detail}"
+                            )
+                    if b2.form_submit_button("Cancel"):
                         ss.edit_mode = False
                         st.rerun()
                 else:
@@ -136,78 +167,57 @@ def main() -> None:
                         ss.edit_mode = True
                         st.rerun()
 
-    # --------------------------------------------------------------------
-    # Tab 2: Create New Event
-    # --------------------------------------------------------------------
+    # ─── Create New Event Tab ────────────────────────────────
     with tab_create:
-        st.subheader("Create New Event")
-        with st.form("create_event_form"):
-            code = (
-                st.text_input(
-                    "Event Code",
-                    placeholder="E.g., MY_EVENT_24",
-                    help="Must be unique and alphanumeric (underscores allowed).",
-                )
-                or ""
-            ).strip()
-            name = (
-                st.text_input(
-                    "Event Name",
-                    placeholder="My Awesome Event",
-                    help="Optional name for the event",
-                )
-                or ""
-            ).strip()
-            desc = (
-                st.text_area(
-                    "Description",
-                    placeholder="My Awesome Event Description",
-                    help="Optional longer description of the event",
-                )
-                or ""
-            ).strip()
-
+        st.header("Create New Event")
+        with st.form("create_form"):
+            code = st.text_input("Event Code")
+            name = st.text_input("Event Name")
+            desc = st.text_area("Description")
             cols = st.columns(4)
-            d0 = cols[0].date_input(
-                "Start Date",
-                value=date.today(),
-                help="Select the start date of the event.",
-            )
-            t0 = cols[1].time_input(
-                "Start Time",
-                value=time(9, 0),
-                step=1800,
-                help="Select the start time of the event.",
-            )
-            d1 = cols[2].date_input(
-                "End Date", value=date.today(), help="Select the end date of the event."
-            )
-            t1 = cols[3].time_input(
-                "End Time",
-                value=time(17, 0),
-                step=1800,
-                help="Select the end time of the event.",
-            )
-
+            d0 = cols[0].date_input("Start Date", value=date.today())
+            t0 = cols[1].time_input("Start Time", value=t(9, 0), step=1800)
+            d1 = cols[2].date_input("End Date", value=date.today())
+            t1 = cols[3].time_input("End Time", value=t(17, 0), step=1800)
             if st.form_submit_button("Create Event"):
-                if not code:
+                if not code.strip():
                     st.error("Event Code is required.")
                 else:
-                    try:
-                        created = create_event(
-                            event_code=code,
-                            name=name or None,
-                            description=desc or None,
-                            start_date_time=datetime.combine(d0, t0),
-                            end_date_time=datetime.combine(d1, t1),
-                        )
-                        st.success(f"'{created.get('name', created['code'])}' created!")
-                        st.session_state.event_code = created.get("code")
-                        st.rerun()
-                    except HTTPError as err:
-                        st.error(f"Creation failed: {err}")
-                    except Exception as err:
-                        st.error(f"Unexpected error: {err}")
+                    new = create_event(
+                        event_code=code.strip(),
+                        name=name or None,
+                        description=desc or None,
+                        start_date_time=datetime.combine(d0, t0),
+                        end_date_time=datetime.combine(d1, t1),
+                    )
+                    st.success(f"Created '{new.get('name',new['code'])}'!")
+                    ss.event_code = new["code"]
+                    ss.just_created = True
+                    st.rerun()
+
+        if ss.just_created:
+            new_event = get_events(event_code=code)[0]
+            qr_url = new_event.get("qr_code_image_url")
+            if qr_url:
+                st.markdown("---")
+                st.subheader("Your Event QR Code—save it!")
+                qr_data = None
+                try:
+                    qr_resp = requests.get(qr_url)
+                    qr_resp.raise_for_status()
+                    qr_data = qr_resp.content
+                except Exception:
+                    pass
+                if qr_data:
+                    st.image(qr_data, width=300)
+                    st.download_button(
+                        "Download Event QR Code",
+                        data=qr_data,
+                        file_name=f"{ss.event_code}_qr.png",
+                        mime="image/png",
+                    )
+                else:
+                    st.empty()
 
 
 if __name__ == "__main__":
