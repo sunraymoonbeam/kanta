@@ -1,8 +1,10 @@
+import os
 from typing import Optional
 
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     File,
     HTTPException,
@@ -12,6 +14,7 @@ from fastapi import (
     status,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 from ..core.azure_blob import get_blob_service, get_event_container
 from ..db.base import get_db
@@ -24,6 +27,7 @@ from .schemas import (
     UpdateEventInput,
 )
 from .service import (
+    _generate_and_upload_qr,
     create_event,
     delete_event,
     get_events,
@@ -79,36 +83,39 @@ async def get_events_endpoint(
 # --------------------------------------------------------------------
 # CREATE EVENTS
 # --------------------------------------------------------------------
-@router.post(
-    "",
-    response_model=EventInfo,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create a new event (with optional image)",
-)
+@router.post("", status_code=201)
 async def create_event_endpoint(
-    *,
     payload: CreateEventInput,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     blob_service: BlobServiceClient = Depends(get_blob_service),
-) -> EventInfo:
-    """
-    Create an Event, optionally uploading an image.
-    Generates a QR code pointing to `/events/{code}`.
-    """
+):
+    # 1) Call the service to insert the Event row
     try:
-        event = await create_event(db, payload, blob_service)
-    except EventAlreadyExists as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        )
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        )
+        new_event = await create_event(db, payload)
+    except EventAlreadyExists:
+        raise HTTPException(400, f"Event with code {payload.event_code} already exists")
 
-    return event
+    # 2) Schedule the QR‐generation/upload in the background
+    service_url = os.getenv("KANTA_SERVICE_URL", "https://kanta.domain.com")
+    background_tasks.add_task(
+        _generate_and_upload_qr,
+        new_event.id,
+        new_event.code,
+        blob_service,
+        service_url,
+        db,
+    )
+
+    # 3) Return immediately
+    return JSONResponse(
+        status_code=201,
+        content={
+            "id": new_event.id,
+            "code": new_event.code,
+            "status": "created; QR generation queued",
+        },
+    )
 
 
 # --------------------------------------------------------------------

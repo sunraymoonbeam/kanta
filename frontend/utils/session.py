@@ -23,11 +23,17 @@ def get_event_selection():
 
     st.sidebar.write("### Select Event")
 
+    # Compute the index of the current event_code in event_options
+    try:
+        current_index = event_options.index(st.session_state.event_code)
+    except (ValueError, AttributeError):
+        current_index = 0
+
     # Select box for events
     selected_event = st.sidebar.selectbox(
         "Choose an event",
         options=event_options,
-        index=0,
+        index=current_index,
         format_func=lambda x: x if x else "Select an event...",
         key="event_selector",
     )

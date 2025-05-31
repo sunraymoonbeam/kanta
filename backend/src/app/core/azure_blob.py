@@ -1,11 +1,14 @@
 # backend/src/app/core/azure_blob.py
 
+from functools import lru_cache
 from typing import Any, Optional
 
-from functools import lru_cache
 from azure.core.exceptions import ResourceExistsError
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient, ContainerClient
+
+# from azure.storage.blob import BlobServiceClient, ContainerClient
+# Ren Hwa: IMPORTANT CHANGE here: import from azure.storage.blob.aio, not the sync version
+from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from fastapi import Depends, Path
 from loguru import logger
 
@@ -50,8 +53,8 @@ def get_blob_service() -> BlobServiceClient:
     return _blob_client
 
 
-@lru_cache(maxsize=128)
-def get_event_container(
+# apparantely LRU cache makes asynchronous calls fail and returns a sync client
+async def get_event_container(
     event_code: str = Path(
         ...,
         description="Event code; also used as Azure container name",
@@ -67,8 +70,8 @@ def get_event_container(
     container_name = event_code.lower()
     container = blob_service.get_container_client(container_name)
     try:
-        container.create_container(public_access="blob")  # public access to blobs
+        await container.create_container(public_access="blob")  # public access to blobs
         logger.info(f"Created new container: {container_name}")
     except ResourceExistsError:
-        logger.debug(f"Container already exists: {container_name}")
+        pass
     return container

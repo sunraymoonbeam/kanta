@@ -1,7 +1,10 @@
+import re
 from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, model_validator
+
+AZURE_CONTAINER_NAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9\-]{1,61}[a-z0-9])?$")
 
 
 class CreateEventInput(BaseModel):
@@ -20,11 +23,18 @@ class CreateEventInput(BaseModel):
     """
 
     event_code: str = Field(
-        ..., example="shirashafiq26", description="Unique event code."
+        ...,
+        min_length=3,
+        max_length=63,
+        example="my-event-123",
+        description=(
+            "Unique event code – must match Azure Blob container rules: "
+            "3–63 chars, lowercase letters/numbers/hyphens, no __-__ at ends nor consecutive hyphens."
+        ),
     )
     name: Optional[str] = Field(None, example="Shafiq's & Shira's Wedding")
     description: Optional[str] = Field(
-        None, example="Alice and Bob's wedding ceremony."
+        None, example="Shafiq's & Shira's Wedding details."
     )
     start_date_time: Optional[datetime] = Field(
         None, description="Event start time (UTC)."

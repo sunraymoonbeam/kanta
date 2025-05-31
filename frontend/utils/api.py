@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 import requests
 from requests import HTTPError
 
-API_BASE_URL: str = os.getenv("BACKEND_SERVER_URL", "http://backend/api/v1/:8000")
+API_BASE_URL: str = os.getenv("BACKEND_SERVER_URL", "http://backend:8000/api/v1")
 
 
 def get_events(event_code: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -128,7 +128,7 @@ def upload_image(event_code: str, image_file: Any) -> Dict[str, Any]:
         HTTPError: If the API returns a non-201 status.
     """
     url = f"{API_BASE_URL}/pics/{event_code}"
-    files = {"image": (image_file.name, image_file, "image/jpeg")}
+    files = {"image_file": (image_file.name, image_file, "image/jpeg")}
 
     response = requests.post(url, files=files, timeout=10)
     response.raise_for_status()

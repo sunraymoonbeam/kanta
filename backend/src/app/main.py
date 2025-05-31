@@ -51,7 +51,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description=settings.PROJECT_DESCRIPTION,
     lifespan=lifespan,
-    openapi_prefix=settings.API_V1_STR,
+    root_path=settings.API_V1_STR,
 )
 
 # Include your routers under the configured path prefix

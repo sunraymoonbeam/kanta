@@ -394,7 +394,7 @@ else:
                 sel_key = f"gallery_select_{img['uuid']}"
                 sel = img["uuid"] in ss.gallery_selected_images
                 new = st.checkbox(
-                    "", value=sel, key=sel_key, label_visibility="collapsed"
+                    "sel", value=sel, key=sel_key, label_visibility="collapsed"
                 )
                 if new:
                     ss.gallery_selected_images[img["uuid"]] = img["azure_blob_url"]

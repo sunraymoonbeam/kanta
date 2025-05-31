@@ -1,9 +1,9 @@
 import os
 from io import BytesIO
 from typing import List, Optional
+from urllib.parse import urljoin
 
 import qrcode
-from urllib.parse import urljoin
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from fastapi import UploadFile
@@ -76,7 +76,6 @@ async def get_event(db: AsyncSession, code: str) -> Event:
 async def create_event(
     db: AsyncSession,
     payload: CreateEventInput,
-    blob_service: BlobServiceClient,
 ) -> Event:
     """
     Create a new Event record in the database.
@@ -92,7 +91,6 @@ async def create_event(
     Raises:
         EventAlreadyExists: If an Event with the same code already exists (unique constraint violation).
     """
-    # Create the Event ORM
     new_event = Event(
         code=payload.event_code,
         name=payload.name,
@@ -101,7 +99,6 @@ async def create_event(
         end_date_time=payload.end_date_time,
     )
 
-    # Persist to DB
     db.add(new_event)
     try:
         await db.commit()
@@ -110,36 +107,74 @@ async def create_event(
         await db.rollback()
         raise EventAlreadyExists(payload.event_code) from exc
 
-    # Generate QR image into memory
-    qr = qrcode.QRCode(box_size=10, border=2)
-    service_url = os.getenv("KANTA_SERVICE_URL", "https://your.domain.com")
-    event_url = urljoin(service_url.rstrip("/") + "/", payload.event_code)
-    qr.add_data(event_url)
-    qr.make(fit=True)
-    img = qr.make_image()
-    buf = BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    qr_bytes = buf.getvalue()
+    return new_event
 
-    # Grab/create the container
-    container = blob_service.get_container_client(payload.event_code)
+
+async def _generate_and_upload_qr(
+    event_id: int,
+    event_code: str,
+    blob_service: BlobServiceClient,
+    service_url: str,
+    db_session: AsyncSession,
+):
+    """
+    Background task to generate a QR code PNG and upload it to Azure Blob.
+    Then update the Event.qr_code_image_url in the database.
+
+    Args:
+        event_id (int): The ID of the Event to update.
+        event_code (str): The unique code of the Event.
+        blob_service (BlobServiceClient): Azure Blob Service client for managing event containers.
+        service_url (str): Base URL of the service where the QR code will point.
+        db_session (AsyncSession): Async database session for committing changes.
+
+    Raises:
+        EventNotFound: If the Event with the given ID does not exist.
+    """
+    # 1) Generate the QR bytes
     try:
-        container.create_container(public_access="blob")
+        qr = qrcode.QRCode(box_size=10, border=2)
+        event_url = urljoin(service_url.rstrip("/") + "/", event_code)
+        qr.add_data(event_url)
+        qr.make(fit=True)
+        img = qr.make_image()
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        qr_bytes = buf.getvalue()
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate QR code for event {event_code}: {e}")
+
+    # 2) Ensure container exists
+    container = blob_service.get_container_client(event_code)
+    try:
+        await container.create_container(public_access="blob")
     except ResourceExistsError:
         pass
 
-    # Upload the QR under `assets/qr.png`
+    # 3) Upload the QR under `assets/qr.png`
     asset_path = "assets/qr.png"
-    container.upload_blob(
+    await container.upload_blob(
         name=asset_path,
         data=qr_bytes,
         overwrite=True,
-        metadata={"event_code": payload.event_code},
+        metadata={"event_code": event_code},
     )
-    new_event.qr_code_image_url = f"{container.url}/{asset_path}"
 
-    return new_event
+    # 4) Construct the final URL
+    full_url = f"{container.url}/{asset_path}"
+
+    # 5) Update the Event record in the database
+    try:
+        # Fetch the Event, set its qr_code_image_url, commit
+        event_obj = await db_session.get(Event, event_id)
+        if event_obj:
+            event_obj.qr_code_image_url = full_url
+            await db_session.commit()
+    except Exception:
+        # If something goes wrong, you might log it or retry with another mechanism
+        await db_session.rollback()
+        # You could log: f"Failed to update Event({event_id}) with QR URL."
 
 
 # --------------------------------------------------------------------
@@ -199,7 +234,7 @@ async def update_event(
 
         # 5a) Create the new container
         try:
-            blob_service.create_container(new_container, public_access="blob")
+            await blob_service.create_container(new_container, public_access="blob")
         except ResourceExistsError:
             pass
 
@@ -214,7 +249,7 @@ async def update_event(
 
         # 5c) Delete the old container
         try:
-            blob_service.delete_container(old_container)
+            await blob_service.delete_container(old_container)
         except ResourceNotFoundError:
             pass
 
@@ -235,7 +270,7 @@ async def update_event(
         # Upload the new QR code image to the new container
         container = blob_service.get_container_client(payload.new_event_code)
         asset_path = "assets/qr.png"
-        container.upload_blob(
+        await container.upload_blob(
             name=asset_path,
             data=qr_bytes,
             overwrite=True,
@@ -277,7 +312,7 @@ async def upsert_event_image(
     blob_path = f"assets/event_image.{ext}"
 
     # upload to Azure
-    container.upload_blob(
+    await container.upload_blob(
         name=blob_path,
         data=raw,
         overwrite=True,
@@ -319,7 +354,7 @@ async def delete_event(
     # Delete the Azure Blob Storage container for this event
     container_name = code.lower()
     try:
-        blob_service.delete_container(container_name)
+        await blob_service.delete_container(container_name)
     except ResourceNotFoundError:
         # if the container did not exist, ignore
         pass

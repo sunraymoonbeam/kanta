@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import List, Optional
 
-
 from azure.storage.blob import ContainerClient
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     File,
+    HTTPException,
     Path,
     Query,
     UploadFile,
@@ -23,9 +24,9 @@ from .schemas import (
 )
 from .service import (
     delete_image,
+    full_processing_job,
     get_image_detail,
     get_images,
-    upload_image,
 )
 
 router = APIRouter(prefix="/pics", tags=["images"])
@@ -133,16 +134,17 @@ async def get_one(
 @router.post(
     "/{event_code}",
     response_model=UploadImageResponse,
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_202_ACCEPTED,
     summary="Upload an image, detect faces, store in Azure + DB",
 )
 async def upload(
+    background_tasks: BackgroundTasks,
     event_code: str = Path(
         ...,
         pattern=r"^[a-zA-Z0-9_]+$",
         description="Event code to associate with this image",
     ),
-    image: UploadFile = File(...),
+    image_file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     container: ContainerClient = Depends(get_event_container),
 ) -> UploadImageResponse:
@@ -151,9 +153,10 @@ async def upload(
 
     Args:
         event_code (str): Unique event code to associate with the image.
-        image (UploadFile): Binary image file uploaded by the client.
+        image_file (UploadFile): Binary image file uploaded by the client.
         db (AsyncSession): SQLAlchemy async database session.
         container (ContainerClient): Azure Blob Storage container for the event.
+        background_tasks (BackgroundTasks): FastAPI background task manager.
 
     Returns:
         UploadImageResponse: Contains UUID, URL, face count, bounding boxes, and embeddings.
@@ -161,7 +164,40 @@ async def upload(
     Raises:
         HTTPException: If the file is not a valid image, face detection fails, or storage/DB operations fail.
     """
-    return await upload_image(db, container, event_code, image)
+    # 1) Very basic MIME check
+    if not image_file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Must upload an image")
+
+    # 2) Read raw bytes
+    raw_bytes = await image_file.read()
+
+    # 3) Generate a UUID for this image (so we can return it now)
+    import uuid as _uuid
+
+    image_uuid = _uuid.uuid4().hex
+
+    # 4) Enqueue the full job. Inside full_processing_job we will:
+    #      a) Upload to Azure blob storage
+    #      b) Create/update the Image row in the DB
+    #      c) Run face detection + insert Face rows
+    background_tasks.add_task(
+        full_processing_job,
+        db,
+        container,
+        event_code,
+        image_uuid,
+        raw_bytes,
+        image_file.filename or "",  # so we know an extension if needed
+    )
+
+    # 5) Return immediately with a “202 Accepted” and the UUID.
+    return UploadImageResponse(
+        uuid=image_uuid,
+        blob_url="",  # or “pending_upload”
+        faces=0,
+        boxes=[],
+        embeddings=[],
+    )
 
 
 # --------------------------------------------------------------------

@@ -177,7 +177,7 @@ with tab_people:
                         with check_cols[1]:  # Place checkbox in the middle small column
                             checkbox_key = f"select_person_cb_{cid}_{idx}"
                             selected = st.checkbox(
-                                "",  # No label, text is above
+                                "sel",  # No label, text is above
                                 value=ss.people_selected_clusters.get(cid, False),
                                 key=checkbox_key,
                                 label_visibility="collapsed",
