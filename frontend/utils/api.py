@@ -6,6 +6,18 @@ import requests
 from requests import HTTPError
 
 API_BASE_URL: str = os.getenv("BACKEND_SERVER_URL", "http://backend:8000/api/v1")
+EVENT_URL = f"{API_BASE_URL}/events"
+IMAGE_URL = f"{API_BASE_URL}/pics"
+CLUSTER_URL = f"{API_BASE_URL}/clusters"
+FACE_SIMILARITY_URL = f"{API_BASE_URL}/find-similar"
+
+# --------------------------------------------------------------------
+# EVENTS
+# - get_events: Fetch all events or a specific event by code.
+# - create_event: Create a new event.
+# - update_event: Update an existing event.
+# - delete_event: Delete an event by code.
+# --------------------------------------------------------------------
 
 
 def get_events(event_code: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -21,12 +33,12 @@ def get_events(event_code: Optional[str] = None) -> List[Dict[str, Any]]:
     Raises:
         HTTPError: If the API returns a non-200 status.
     """
-    url = f"{API_BASE_URL}/events"
+    # Build query parameters
     params: Dict[str, str] = {}
     if event_code:
         params["event_code"] = event_code
 
-    response = requests.get(url, params=params, timeout=10)
+    response = requests.get(url=EVENT_URL, params=params, timeout=30)
     try:
         response.raise_for_status()
     except HTTPError:
@@ -60,7 +72,6 @@ def create_event(
     Raises:
         HTTPError: If the API returns a non-201 status.
     """
-    url = f"{API_BASE_URL}/events"
     payload: Dict[str, Any] = {
         "event_code": event_code,
         "name": name,
@@ -69,7 +80,7 @@ def create_event(
         "end_date_time": end_date_time.isoformat(),
     }
 
-    response = requests.post(url, json=payload, timeout=10)
+    response = requests.post(url=EVENT_URL, json=payload, timeout=15)
     response.raise_for_status()
 
     return response.json()
@@ -107,30 +118,7 @@ def update_event(
         "end_date_time": end_date_time.isoformat(),
     }
 
-    response = requests.put(url, json=payload, timeout=10)
-    response.raise_for_status()
-
-    return response.json()
-
-
-def upload_image(event_code: str, image_file: Any) -> Dict[str, Any]:
-    """
-    Upload an image file to a specific event.
-
-    Args:
-        event_code: The event code to associate the image with.
-        image_file: File-like object (e.g., io.BytesIO or uploaded file).
-
-    Returns:
-        API response as a dictionary.
-
-    Raises:
-        HTTPError: If the API returns a non-201 status.
-    """
-    url = f"{API_BASE_URL}/pics/{event_code}"
-    files = {"image_file": (image_file.name, image_file, "image/jpeg")}
-
-    response = requests.post(url, files=files, timeout=10)
+    response = requests.put(url, json=payload, timeout=15)
     response.raise_for_status()
 
     return response.json()
@@ -159,6 +147,32 @@ def upload_event_image(event_code: str, image_file: Any) -> Dict[str, Any]:
     return response.json()
 
 
+def delete_event(event_code: str) -> None:
+    """
+    Delete an event by its code.
+
+    Args:
+        event_code: The code of the event to delete.
+
+    Returns:
+        API response as a dictionary.
+
+    Raises:
+        HTTPError: If the API returns a non-204 status.
+    """
+    payload: Dict[str, str] = {"event_code": event_code}
+
+    response = requests.delete(url=EVENT_URL, json=payload, timeout=15)
+    response.raise_for_status()
+
+
+# --------------------------------------------------------------------
+# IMAGES
+# - get_images: Fetch images with optional filters.
+# - get_image_detail: Fetch detailed information for a given image UUID.
+# - upload_image: Upload an image file to a specific event.
+# - delete_image: Delete an image by its UUID.
+# --------------------------------------------------------------------
 def get_images(
     event_code: str, limit: int = 50, offset: int = 0, **filter_params: Optional[str]
 ) -> Dict[str, Any]:
@@ -178,7 +192,6 @@ def get_images(
     Raises:
         HTTPError: If the API returns a non-200 status.
     """
-    url = f"{API_BASE_URL}/pics"
     # Build query parameters
     params = {
         "event_code": event_code,
@@ -187,7 +200,7 @@ def get_images(
         **{k: v for k, v in filter_params.items() if v is not None},
     }
 
-    response = requests.get(url, params=params, timeout=10)
+    response = requests.get(url=IMAGE_URL, params=params, timeout=10)
     response.raise_for_status()
 
     return response.json()
@@ -206,7 +219,7 @@ def get_image_detail(image_uuid: str) -> Dict[str, Any]:
     Raises:
         HTTPError: If the API returns a non-200 status.
     """
-    url = f"{API_BASE_URL}/pics/{image_uuid}"
+    url = f"{IMAGE_URL}/{image_uuid}"
 
     response = requests.get(url, timeout=10)
     response.raise_for_status()
@@ -214,6 +227,50 @@ def get_image_detail(image_uuid: str) -> Dict[str, Any]:
     return response.json()
 
 
+def upload_image(event_code: str, image_file: Any) -> Dict[str, Any]:
+    """
+    Upload an image file to a specific event.
+
+    Args:
+        event_code: The event code to associate the image with.
+        image_file: File-like object (e.g., io.BytesIO or uploaded file).
+
+    Returns:
+        API response as a dictionary.
+
+    Raises:
+        HTTPError: If the API returns a non-201 status.
+    """
+    url = f"{IMAGE_URL}/{event_code}"
+    files = {"image_file": (image_file.name, image_file, "image/jpeg")}
+
+    response = requests.post(url, files=files, timeout=10)
+    response.raise_for_status()
+
+    return response.json()
+
+
+def delete_image(event_code: str, image_uuid: str) -> None:
+    """
+    Delete an image by its UUID.
+
+    Args:
+        image_uuid: The UUID of the image to delete.
+
+    Raises:
+        HTTPError: If the API returns a non-204 status.
+    """
+    url = f"{IMAGE_URL}/{event_code}/{image_uuid}"
+
+    response = requests.delete(url, timeout=10)
+    response.raise_for_status()
+
+
+# --------------------------------------------------------------------
+# CLUSTERS
+# - get_clusters: Fetch clustering information for an event.
+# - find_similar_faces: Find similar faces by uploading an image.
+# --------------------------------------------------------------------
 def get_clusters(event_code: str, sample_size: int = 5) -> Dict[str, Any]:
     """
     Fetch clustering information for an event.
@@ -228,10 +285,9 @@ def get_clusters(event_code: str, sample_size: int = 5) -> Dict[str, Any]:
     Raises:
         HTTPError: If the API returns a non-200 status.
     """
-    url = f"{API_BASE_URL}/clusters"
     params = {"event_code": event_code, "sample_size": sample_size}
 
-    response = requests.get(url, params=params, timeout=10)
+    response = requests.get(url=CLUSTER_URL, params=params, timeout=10)
     response.raise_for_status()
 
     return response.json()
@@ -260,7 +316,6 @@ def find_similar_faces(
     Raises:
         HTTPError: If the API returns a non-200 status.
     """
-    url = f"{API_BASE_URL}/find-similar"
     files = {
         # must match the parameter name "image" in FastAPI
         "image": (image_filename, image_bytes, "image/jpeg")
@@ -273,7 +328,7 @@ def find_similar_faces(
     }
 
     response = requests.post(
-        url,
+        url=FACE_SIMILARITY_URL,
         files=files,
         params=params,
         timeout=30,

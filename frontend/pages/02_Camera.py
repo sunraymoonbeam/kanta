@@ -37,10 +37,7 @@ def main() -> None:
     # Instructions
     st.title("Event Film Cam")
     st.markdown(
-        """
-- Use the **film camera** for a limited roll of disposable shots.
-- Separately, you can **upload existing images** from your device directly to the event (no limit).
-        """
+        """Use the **disposable camera** for a limited roll of shots. You can also directly **upload existing images** from your device directly (no limit)."""
     )
 
     # Check event selection
@@ -51,9 +48,11 @@ def main() -> None:
     # --------------------------------------------------------------------
     # Upload Existing Photos: Allows users to upload images from their device
     # --------------------------------------------------------------------
-    with st.expander(
-        "Upload existing photos from your device (no shot limit)", expanded=False
-    ):
+    st.subheader("Upload Existing Photos")
+    st.markdown(
+        "Upload images from your device to the event. You can upload any number of images."
+    )
+    with st.expander("Upload existing photos from your device", expanded=False):
         device_files = st.file_uploader(
             "Choose images",
             type=["jpg", "jpeg", "png"],
@@ -110,13 +109,45 @@ def main() -> None:
     # --------------------------------------------------------------------
     shots_used = len(ss.pending_camera_shots) + len(ss.uploaded_camera_shots)
     shots_left = MAX_DISPOSABLE_SHOTS - shots_used
-    color = "#ef476f" if shots_left <= 5 else "#fca311" if shots_left <= 10 else "#eee"
     st.markdown(
         f"""
-<div style='font-family:monospace;font-size:18px;padding:8px;background:#222;color:{color};border-radius:8px;text-align:center;margin-bottom:16px;'>
-DISPOSABLE CAMERA: {shots_left} SHOT{'S' if shots_left != 1 else ''} REMAINING
+<div style="
+    font-family: Impact, sans-serif;
+    font-size: 28px;
+    font-weight: bold;
+    padding: 25px 40px;
+    background: #F6DCAC;
+    color: #01204E;
+    text-align: center;
+    border-radius: 20px;
+    position: relative;
+    border-top: 6px solid #028391;
+    border-bottom: 6px solid #F85525;
+    margin-bottom: 16px;
+">
+    <div style="
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 15px;
+        width: 8px;
+        height: 60%;
+        background: linear-gradient(to bottom, #028391, #FAA968, #F85525);
+        opacity: 0.7;
+    "></div>
+    <div style="
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 15px;
+        width: 8px;
+        height: 60%;
+        background: linear-gradient(to bottom, #028391, #FAA968, #F85525);
+        opacity: 0.7;
+    "></div>
+    DISPOSABLE CAMERA: {shots_left} SHOT{'S' if shots_left != 1 else ''} REMAINING
 </div>
-        """,
+""",
         unsafe_allow_html=True,
     )
 
@@ -125,7 +156,7 @@ DISPOSABLE CAMERA: {shots_left} SHOT{'S' if shots_left != 1 else ''} REMAINING
     # --------------------------------------------------------------------
     camera_col, film_col = st.columns([2, 3], gap="medium")
     with camera_col:
-        st.subheader("📸 Film Camera")
+        st.subheader("Disposable Camera")
         key = f"camera_input_{shots_left}"
         frame = (
             st.camera_input("Tap shutter (horizontal preferred)", key=key)
@@ -166,7 +197,7 @@ DISPOSABLE CAMERA: {shots_left} SHOT{'S' if shots_left != 1 else ''} REMAINING
     # Film Strip Component: Displays pending and uploaded shots in a film strip format
     # --------------------------------------------------------------------
     with film_col:
-        st.subheader("🎞️ Film Strip")
+        st.subheader("Film Strip")
         st.markdown(
             "Your captured shots. Upload or delete pending shots using the buttons below."
         )
@@ -210,9 +241,9 @@ DISPOSABLE CAMERA: {shots_left} SHOT{'S' if shots_left != 1 else ''} REMAINING
         up_col, del_col = st.columns(2)
         with up_col:
             if st.button(
-                "📤 Upload Selected Shots",
+                "Upload Selected Shots",
                 key="btn_upload",
-                use_container_width=True,
+                # use_container_width=True,
                 type="secondary",
             ):
                 selected = [
@@ -248,9 +279,9 @@ DISPOSABLE CAMERA: {shots_left} SHOT{'S' if shots_left != 1 else ''} REMAINING
                     st.rerun()
         with del_col:
             if st.button(
-                "🗑️ Delete Selected Shots",
+                "Delete Selected Shots",
                 key="btn_delete",
-                use_container_width=True,
+                # use_container_width=True,
                 type="secondary",
             ):
                 to_del = [

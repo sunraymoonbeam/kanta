@@ -204,7 +204,7 @@ async def upload(
 # DELETE IMAGE
 # --------------------------------------------------------------------
 @router.delete(
-    "/{image_uuid}",
+    "/{event_code}/{image_uuid}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete an image and its faces (DB + blob)",
 )

@@ -39,6 +39,7 @@ services:
     environment:
       - STREAMLIT_SERVER_PORT=8501
       - BACKEND_SERVER_URL=http://backend:8000/api/v1
+      - ADMIN_PASSWORD=password123
     volumes:
       - ./frontend/assets:/app/assets
     depends_on:
