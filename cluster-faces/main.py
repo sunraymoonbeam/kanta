@@ -234,7 +234,6 @@ def main(cfg: DictConfig) -> None:
     """Hydra main entry point."""
     asyncio.run(run(cfg))
 
-
 # AWS Lambda handler
 async def handler_async(event, context):
     config_path = os.getenv("CONFIG_PATH", "conf/config.yaml")
