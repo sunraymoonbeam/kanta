@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "cluster-faces"
 version = "0.1.0"
@@ -24,3 +28,22 @@ dependencies = [
     "tqdm>=4.67.1",
     "umap-learn>=0.5.7",
 ]
+
+[dependency-groups]
+dev = [
+    "fastparquet>=2024.11.0",
+    "pyarrow>=20.0.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::FutureWarning",
+]
+addopts = "-v"
