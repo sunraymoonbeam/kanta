@@ -22,15 +22,26 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install the project
-        working-directory: ./cluster-faces
-        run: uv sync --locked --all-extras --dev
-
       - name: Run Ruff linting
         working-directory: ./cluster-faces
         run: uvx ruff check --fix
 
+      - name: Install the project
+        working-directory: ./cluster-faces
+        run: uv sync --locked --all-extras --dev
+
+      - name: Check for src changes
+        id: check-src-changes
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only FETCH_HEAD HEAD)
+          if echo "$CHANGED_FILES" | grep -q "cluster-faces/src/"; then
+            echo "src_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "src_changed=false" >> $GITHUB_OUTPUT
+          fi
+          
       - name: Run tests
         working-directory: ./cluster-faces
-        if: ${{ github.event_name == 'push' && contains(github.event.commits[0].modified, 'cluster-faces/src/') || github.event_name == 'pull_request' && contains(github.event.pull_request.changed_files, 'cluster-faces/src/') }}
+        if: steps.check-src-changes.outputs.src_changed == 'true'
         run: uv run pytest tests
