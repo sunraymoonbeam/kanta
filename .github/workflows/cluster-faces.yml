@@ -1,13 +1,6 @@
 name: Kanta Face Clustering CI
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'cluster-faces/src/**'
-      - 'cluster-faces/tests/**'
-      - 'cluster-faces/pyproject.toml'
-      - 'cluster-faces/uv.lock'
   pull_request:
     branches: [ main ]
     paths:
@@ -35,7 +28,7 @@ jobs:
 
       - name: Run Ruff linting
         working-directory: ./cluster-faces
-        run: uvx ruff
+        run: uvx ruff check --fix
 
       - name: Run tests
         working-directory: ./cluster-faces
