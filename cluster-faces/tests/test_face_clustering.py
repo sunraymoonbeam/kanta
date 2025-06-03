@@ -310,8 +310,7 @@ def test_optics_clustering(face_embeddings):
 
 def test_affinity_propagation_clustering(face_embeddings):
     """Test Affinity Propagation clustering."""
-    # Use a subset of data for affinity propagation as it's slow with large datasets
-    embeddings = face_embeddings["embeddings"][:50]
+    embeddings = face_embeddings["embeddings"]
     
     labels = affinity_propagation_cluster(
         embeddings=embeddings,
