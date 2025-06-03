@@ -1,15 +1,45 @@
 import os
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
+import streamlit as st
 from requests import HTTPError
 
 API_BASE_URL: str = os.getenv("BACKEND_SERVER_URL", "http://backend:8000/api/v1")
+SYSTEM_HEALTH_URL = f"{API_BASE_URL}/system/health"
 EVENT_URL = f"{API_BASE_URL}/events"
 IMAGE_URL = f"{API_BASE_URL}/pics"
 CLUSTER_URL = f"{API_BASE_URL}/clusters"
 FACE_SIMILARITY_URL = f"{API_BASE_URL}/find-similar"
+
+
+def wait_for_backend(timeout=30, interval=2):
+    """
+    Wait for the backend service to be ready.
+
+    Args:
+        url: The URL to check for readiness.
+        timeout: Maximum time to wait in seconds.
+        interval: Time to wait between checks in seconds.
+
+    Returns:
+        True if the backend is ready, otherwise raises an error.
+    """
+    start = time.time()
+    with st.spinner("Waiting for backend to spin up...this could take a few seconds."):
+        while time.time() - start < timeout:
+            try:
+                r = requests.get(SYSTEM_HEALTH_URL, timeout=5)
+                if r.status_code == 200:
+                    return True
+            except Exception:
+                pass
+            time.sleep(interval)
+    st.error("Backend not ready. Exiting application.")
+    st.stop()
+
 
 # --------------------------------------------------------------------
 # EVENTS
@@ -80,7 +110,7 @@ def create_event(
         "end_date_time": end_date_time.isoformat(),
     }
 
-    response = requests.post(url=EVENT_URL, json=payload, timeout=15)
+    response = requests.post(url=EVENT_URL, json=payload, timeout=30)
     response.raise_for_status()
 
     return response.json()
@@ -118,7 +148,7 @@ def update_event(
         "end_date_time": end_date_time.isoformat(),
     }
 
-    response = requests.put(url, json=payload, timeout=15)
+    response = requests.put(url, json=payload, timeout=30)
     response.raise_for_status()
 
     return response.json()
@@ -141,7 +171,7 @@ def upload_event_image(event_code: str, image_file: Any) -> Dict[str, Any]:
     url = f"{API_BASE_URL}/events/image/{event_code}"
     files = {"image_file": (image_file.name, image_file, "image/jpeg")}
 
-    response = requests.put(url, files=files, timeout=10)
+    response = requests.put(url, files=files, timeout=30)
     response.raise_for_status()
 
     return response.json()
@@ -162,7 +192,7 @@ def delete_event(event_code: str) -> None:
     """
     payload: Dict[str, str] = {"event_code": event_code}
 
-    response = requests.delete(url=EVENT_URL, json=payload, timeout=15)
+    response = requests.delete(url=EVENT_URL, json=payload, timeout=30)
     response.raise_for_status()
 
 
@@ -200,7 +230,7 @@ def get_images(
         **{k: v for k, v in filter_params.items() if v is not None},
     }
 
-    response = requests.get(url=IMAGE_URL, params=params, timeout=10)
+    response = requests.get(url=IMAGE_URL, params=params, timeout=30)
     response.raise_for_status()
 
     return response.json()
@@ -221,7 +251,7 @@ def get_image_detail(image_uuid: str) -> Dict[str, Any]:
     """
     url = f"{IMAGE_URL}/{image_uuid}"
 
-    response = requests.get(url, timeout=10)
+    response = requests.get(url, timeout=30)
     response.raise_for_status()
 
     return response.json()
@@ -244,7 +274,7 @@ def upload_image(event_code: str, image_file: Any) -> Dict[str, Any]:
     url = f"{IMAGE_URL}/{event_code}"
     files = {"image_file": (image_file.name, image_file, "image/jpeg")}
 
-    response = requests.post(url, files=files, timeout=10)
+    response = requests.post(url, files=files, timeout=30)
     response.raise_for_status()
 
     return response.json()
@@ -262,7 +292,7 @@ def delete_image(event_code: str, image_uuid: str) -> None:
     """
     url = f"{IMAGE_URL}/{event_code}/{image_uuid}"
 
-    response = requests.delete(url, timeout=10)
+    response = requests.delete(url, timeout=30)
     response.raise_for_status()
 
 
@@ -287,7 +317,7 @@ def get_clusters(event_code: str, sample_size: int = 5) -> Dict[str, Any]:
     """
     params = {"event_code": event_code, "sample_size": sample_size}
 
-    response = requests.get(url=CLUSTER_URL, params=params, timeout=10)
+    response = requests.get(url=CLUSTER_URL, params=params, timeout=30)
     response.raise_for_status()
 
     return response.json()

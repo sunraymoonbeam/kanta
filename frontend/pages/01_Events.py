@@ -8,10 +8,10 @@ import requests
 import streamlit as st
 from utils.api import (
     create_event,
+    delete_event,
     get_events,
     update_event,
     upload_event_image,
-    delete_event,
 )
 from utils.session import get_event_selection, init_session_state
 

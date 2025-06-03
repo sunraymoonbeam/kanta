@@ -33,7 +33,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     platform: linux/amd64
-    command: [uv, run, streamlit, run, Home.py]
+    command: ["streamlit", "run", "Home.py"]
     ports:
       - 8501:8501
     environment:

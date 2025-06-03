@@ -1,4 +1,5 @@
 import streamlit as st
+from utils.api import wait_for_backend
 from utils.session import get_event_selection, init_session_state
 
 # Page Configuration
@@ -11,6 +12,9 @@ st.set_page_config(
 
 
 def main():
+    # Wait for backend to be ready
+    wait_for_backend()
+
     # Session State Initialization
     init_session_state()
     get_event_selection()
