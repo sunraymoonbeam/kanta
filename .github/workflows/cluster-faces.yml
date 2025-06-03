@@ -4,17 +4,17 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
+      - 'cluster-faces/src/**'
+      - 'cluster-faces/tests/**'
+      - 'cluster-faces/pyproject.toml'
+      - 'cluster-faces/uv.lock'
   pull_request:
     branches: [ main ]
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
+      - 'cluster-faces/src/**'
+      - 'cluster-faces/tests/**'
+      - 'cluster-faces/pyproject.toml'
+      - 'cluster-faces/uv.lock'
 
 jobs:
   test-and-lint:
@@ -30,11 +30,14 @@ jobs:
           enable-cache: true
 
       - name: Install the project
+        working-directory: ./cluster-faces
         run: uv sync --locked --all-extras --dev
 
       - name: Run Ruff linting
+        working-directory: ./cluster-faces
         run: uvx ruff
 
       - name: Run tests
-        if: ${{ github.event_name == 'push' && contains(github.event.commits[0].modified, 'src/') || github.event_name == 'pull_request' && contains(github.event.pull_request.changed_files, 'src/') }}
+        working-directory: ./cluster-faces
+        if: ${{ github.event_name == 'push' && contains(github.event.commits[0].modified, 'cluster-faces/src/') || github.event_name == 'pull_request' && contains(github.event.pull_request.changed_files, 'cluster-faces/src/') }}
         run: uv run pytest tests
