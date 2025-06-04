@@ -335,7 +335,7 @@ def test_affinity_propagation_clustering(face_embeddings):
         convergence_iter=15,
     )
 
-    assert labels.shape[0] == 50
+    assert labels.shape[0] == embeddings.shape[0]
     assert isinstance(labels[0], np.integer)
     # Should have multiple clusters
     assert len(np.unique(labels)) > 1
