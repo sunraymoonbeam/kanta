@@ -33,11 +33,11 @@ jobs:
       - name: Run Ruff linting
         working-directory: ./cluster-faces
         run: uvx ruff check --fix
-        
+
       - name: Install the project
         working-directory: ./cluster-faces
         run: uv sync --locked --all-extras --dev
 
       - name: Run tests
         working-directory: ./cluster-faces
-        run: uv run pytest tests
+        run: uv run pytest
