@@ -15,7 +15,7 @@ jobs:
     env:
       # Configure a constant location for the uv cache
       UV_CACHE_DIR: /tmp/.uv-cache
-      
+
     steps:
       - uses: actions/checkout@v4
 
@@ -41,16 +41,16 @@ jobs:
         working-directory: ./backend
         run: uv sync --locked --all-extras --dev
 
-      # - name: Run tests
-      #   working-directory: ./backend
-      #   env:
-      #     AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-      #     POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-      #     POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      #     POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-      #     POSTGRES_SERVER: ${{ secrets.POSTGRES_SERVER }}
-      #     POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-      #   run: uv run pytest
+      - name: Run tests
+        working-directory: ./backend
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_SERVER: ${{ secrets.POSTGRES_SERVER }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        run: uv run pytest
 
       - name: Minimise uv cache
         run: uv cache prune --ci
