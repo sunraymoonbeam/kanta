@@ -1,6 +1,6 @@
 # app/core/config.py
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
-    POSTGRES_PORT: int = 5432
+    POSTGRES_PORT: Union[int, str] = 5432
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
     # Azure Blob
