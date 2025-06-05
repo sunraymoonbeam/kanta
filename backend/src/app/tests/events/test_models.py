@@ -4,9 +4,7 @@ Unit tests for the events models.
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from ..models import Event
-# Import Image model to ensure SQLAlchemy can resolve relationships
-from ...images.models import Image, Face
+from app.events.models import Event
 
 
 class TestEventModel:

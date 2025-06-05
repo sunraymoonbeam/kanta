@@ -11,8 +11,7 @@ from fastapi import HTTPException
 from PIL import Image as PILImage
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..schemas import ClusterInfo, SimilarFaceOut
-from ..service import get_cluster_summary, find_similar_faces
+from app.clusters.service import get_cluster_summary, find_similar_faces
 
 
 @pytest.fixture

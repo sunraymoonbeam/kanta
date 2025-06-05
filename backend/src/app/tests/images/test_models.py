@@ -1,9 +1,7 @@
 """
 Unit tests for the images models.
 """
-from datetime import datetime, timezone
-
-from ..models import Image, Face
+from app.images.models import Image, Face
 
 
 class TestImageModel:

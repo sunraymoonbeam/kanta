@@ -3,15 +3,14 @@ Unit tests for the clusters utils module.
 """
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import List, Tuple, Any
 
 import numpy as np
 import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..utils import recluster_event_faces
-from ...images.models import Face
+from app.clusters.utils import recluster_event_faces
+from app.images.models import Face
 
 
 @pytest.fixture

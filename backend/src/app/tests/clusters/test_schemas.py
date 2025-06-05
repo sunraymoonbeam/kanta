@@ -4,8 +4,7 @@ Unit tests for the clusters schemas.
 import pytest
 from pydantic import ValidationError
 
-from ..schemas import ClusterSample, ClusterInfo, SimilarFaceOut
-
+from app.clusters.schemas import ClusterSample, ClusterInfo, SimilarFaceOut
 
 class TestClusterSample:
     """Tests for the ClusterSample schema."""

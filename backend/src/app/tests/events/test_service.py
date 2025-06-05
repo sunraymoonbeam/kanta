@@ -1,11 +1,8 @@
 """
 Unit tests for the events service module.
 """
-import os
 from datetime import datetime, timedelta, timezone
-from io import BytesIO
 import pytest
-import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 
@@ -13,10 +10,10 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
-from ..exceptions import EventAlreadyExists, EventNotFound
-from ..models import Event
-from ..schemas import CreateEventInput, UpdateEventInput
-from ..service import (
+from app.events.exceptions import EventAlreadyExists, EventNotFound
+from app.events.models import Event
+from app.events.schemas import CreateEventInput, UpdateEventInput
+from app.events.service import (
     get_events,
     get_event,
     create_event,

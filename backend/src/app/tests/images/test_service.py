@@ -1,21 +1,19 @@
 """
 Unit tests for the images service.
 """
-import asyncio
 from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi import HTTPException
 
-from ..service import (
+from app.images.service import (
     get_images,
     get_image_detail,
     do_face_recognition,
     full_processing_job,
     delete_image,
 )
-from ..models import Image, Face
-from ..schemas import ImageListItem, ImageDetailResponse, FaceSummary
+from app.images.schemas import ImageDetailResponse
 
 
 class TestGetImages:

@@ -5,13 +5,12 @@ This file contains common fixtures and configuration for testing the images modu
 """
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, List
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from azure.storage.blob import ContainerClient
 
-from ..models import Image, Face
+from app.images.models import Image, Face
 
 
 @pytest.fixture

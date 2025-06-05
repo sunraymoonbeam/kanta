@@ -1,12 +1,10 @@
 """
 Unit tests for the images schemas.
 """
-from datetime import datetime, timezone
-from typing import Sequence
 import pytest
 from pydantic import ValidationError
 
-from ..schemas import (
+from app.images.schemas import (
     UploadImageResponse,
     ImageListItem,
     FaceSummary,

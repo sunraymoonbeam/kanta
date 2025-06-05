@@ -3,10 +3,9 @@ Unit tests for the events schemas.
 """
 from datetime import datetime, timedelta, timezone
 import pytest
-import re
 from pydantic import ValidationError
 
-from ..schemas import (
+from app.events.schemas import (
     CreateEventInput,
     UpdateEventInput,
     DeleteEventInput,
