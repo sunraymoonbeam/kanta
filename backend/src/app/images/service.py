@@ -1,22 +1,17 @@
 import asyncio
-import json
-import uuid
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from io import BytesIO
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import face_recognition
 import numpy as np
 from azure.storage.blob import ContainerClient
-from fastapi import HTTPException, UploadFile
-from fastapi.concurrency import run_in_threadpool
 from loguru import logger
 from PIL import Image as PILImage
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from starlette.concurrency import run_in_threadpool
 
 from ..events.service import get_event
 from .models import Face, Image
@@ -24,8 +19,9 @@ from .schemas import (
     FaceSummary,
     ImageDetailResponse,
     ImageListItem,
-    UploadImageResponse,
 )
+
+from fastapi import HTTPException
 
 # Create a global ProcessPoolExecutor, perhaps with 4 worker processes
 _process_pool = ProcessPoolExecutor(max_workers=4)

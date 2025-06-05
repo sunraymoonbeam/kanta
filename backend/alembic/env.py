@@ -2,6 +2,10 @@ from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+from src.app.db.base import Base
+# from src.app.events.models import Event
+# from src.app.images.models import Face, Image
+# from myapp import mymodel
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,11 +18,8 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
+
 # target_metadata = mymodel.Base.metadata
-from src.app.db.base import Base
-from src.app.events.models import Event
-from src.app.images.models import Face, Image
 
 # set the target metadata for `autogenerate`
 target_metadata = Base.metadata
