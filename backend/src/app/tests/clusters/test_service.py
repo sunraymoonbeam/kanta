@@ -232,7 +232,7 @@ class TestFindSimilarFaces:
              patch("face_recognition.face_encodings", return_value=[mock_embedding]):
 
             # Execute
-            result = await find_similar_faces(mock_db, "test-event", test_image_bytes, "l2", 2)
+            await find_similar_faces(mock_db, "test-event", test_image_bytes, "l2", 2)
 
             # Assert SQL query uses correct operator
             call_args = mock_db.execute.call_args

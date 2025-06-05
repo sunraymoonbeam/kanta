@@ -399,7 +399,7 @@ class TestUpdateEvent:
             
             # Check container copy and delete operations
             old_client = mock_blob_service.get_container_client.return_value
-            new_client = mock_blob_service.get_container_client.return_value
+            mock_blob_service.get_container_client.return_value
             assert old_client.list_blobs.call_count == 1
             mock_blob_service.delete_container.assert_called_once_with(event_data["code"].lower())
 
@@ -429,7 +429,7 @@ class TestUpdateEvent:
         
         with patch('app.events.service.get_event', return_value=event) as mock_get_event:
             # Execute and assert
-            with pytest.raises(EventAlreadyExists) as excinfo:
+            with pytest.raises(EventAlreadyExists):
                 await update_event(mock_db, update_event_input, mock_blob_service)
             
             mock_get_event.assert_called_once()

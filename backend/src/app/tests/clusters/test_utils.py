@@ -10,8 +10,6 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clusters.utils import recluster_event_faces
-from app.images.models import Face
-
 
 @pytest.fixture
 def mock_db():

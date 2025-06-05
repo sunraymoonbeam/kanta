@@ -158,7 +158,7 @@ class TestImageListItem:
 
     def test_image_list_item_from_orm_config(self):
         """Test that ImageListItem has from_attributes=True config."""
-        assert ImageListItem.model_config.get('from_attributes', False) == True
+        assert ImageListItem.model_config.get('from_attributes', False)
 
 
 class TestFaceSummary:
@@ -236,7 +236,7 @@ class TestFaceSummary:
 
     def test_face_summary_from_orm_config(self):
         """Test that FaceSummary has from_attributes=True config."""
-        assert FaceSummary.model_config.get('from_attributes', False) == True
+        assert FaceSummary.model_config.get('from_attributes', False)
 
 
 class TestImageDetailResponse:
@@ -376,4 +376,4 @@ class TestImageDetailResponse:
 
     def test_image_detail_response_from_orm_config(self):
         """Test that ImageDetailResponse has from_attributes=True config."""
-        assert ImageDetailResponse.model_config.get('from_attributes', False) == True
+        assert ImageDetailResponse.model_config.get('from_attributes', False)
