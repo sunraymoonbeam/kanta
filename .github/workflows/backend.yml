@@ -21,13 +21,13 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install the project
-        working-directory: ./backend
-        run: uv sync --locked --all-extras --dev
-
       - name: Run Ruff linting
         working-directory: ./backend
         run: uvx ruff check --fix
+
+      - name: Install the project
+        working-directory: ./backend
+        run: uv sync --locked --all-extras --dev
 
       - name: Run tests
         working-directory: ./backend
