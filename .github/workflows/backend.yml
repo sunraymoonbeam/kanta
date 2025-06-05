@@ -12,7 +12,10 @@ jobs:
   test-and-lint:
     name: Test & Lint
     runs-on: ubuntu-latest
-
+    env:
+      # Configure a constant location for the uv cache
+      UV_CACHE_DIR: /tmp/.uv-cache
+      
     steps:
       - uses: actions/checkout@v4
 
