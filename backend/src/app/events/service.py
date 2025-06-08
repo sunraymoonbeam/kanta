@@ -134,7 +134,8 @@ async def _generate_and_upload_qr(
     # 1) Generate the QR bytes
     try:
         qr = qrcode.QRCode(box_size=10, border=2)
-        event_url = urljoin(service_url.rstrip("/") + "/", event_code)
+        # event_url = urljoin(service_url.rstrip("/") + "/", event_code)
+        event_url = "https://www.youtube.com/watch?v=hB7CDrVnNCs&ab_channel=Dolo1"
         qr.add_data(event_url)
         qr.make(fit=True)
         img = qr.make_image()
