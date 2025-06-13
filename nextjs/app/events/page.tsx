@@ -7,6 +7,7 @@ import {
   updateEvent,
   uploadEventImage,
 } from '../../lib/api';
+import { useEvents } from '../../components/EventContext';
 
 interface EventInfo {
   code: string;
@@ -18,9 +19,8 @@ interface EventInfo {
 }
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<EventInfo[]>([]);
+  const { events, selected, setSelected, refresh } = useEvents();
   const [tab, setTab] = useState<'current' | 'create' | 'delete'>('current');
-  const [selected, setSelected] = useState('');
   const [form, setForm] = useState({
     code: '',
     name: '',
@@ -38,10 +38,8 @@ export default function EventsPage() {
   const [imgFile, setImgFile] = useState<File>();
 
   useEffect(() => {
-    getEvents().then((evts) => {
-      setEvents(evts);
-      if (evts.length && !selected) setSelected(evts[0].code);
-    });
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -67,14 +65,14 @@ export default function EventsPage() {
       start_date_time: new Date(form.start).toISOString(),
       end_date_time: new Date(form.end).toISOString(),
     });
-    setEvents(await getEvents());
+    await refresh();
     setTab('current');
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     await deleteEvent(selected);
-    setEvents(await getEvents());
+    await refresh();
     setSelected('');
   };
 
@@ -90,7 +88,7 @@ export default function EventsPage() {
     if (imgFile) {
       await uploadEventImage(selected, imgFile);
     }
-    setEvents(await getEvents());
+    await refresh();
     setEdit(false);
   };
 

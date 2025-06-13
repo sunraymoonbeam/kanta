@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getImages } from '../../lib/api';
+import { useEvents } from '../../components/EventContext';
 
 export default function GalleryPage() {
-  const [eventCode, setEventCode] = useState('');
+  const { selected: eventCode } = useEvents();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [minFaces, setMinFaces] = useState('');
@@ -26,11 +27,15 @@ export default function GalleryPage() {
     setImages(Array.isArray(data) ? data : data.images || []);
   };
 
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventCode]);
+
   return (
     <section>
       <h2>Gallery</h2>
       <div>
-        <input placeholder='event code' value={eventCode} onChange={e=>setEventCode(e.target.value)} />
         <input type='date' value={dateFrom} onChange={e=>setDateFrom(e.target.value)} />
         <input type='date' value={dateTo} onChange={e=>setDateTo(e.target.value)} />
         <input className='small-input' placeholder='min faces' value={minFaces} onChange={e=>setMinFaces(e.target.value)} />

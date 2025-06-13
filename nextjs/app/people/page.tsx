@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getClusters, findSimilarFaces } from '../../lib/api';
+import { useEvents } from '../../components/EventContext';
 
 export default function PeoplePage() {
-  const [eventCode, setEventCode] = useState('');
+  const { selected: eventCode } = useEvents();
   const [tab, setTab] = useState<'people' | 'search'>('people');
   const [sampleSize, setSampleSize] = useState(1);
   const [clusters, setClusters] = useState<any[]>([]);
@@ -22,14 +23,16 @@ export default function PeoplePage() {
     setResults(data);
   };
 
+  useEffect(() => {
+    if (tab === 'people' && eventCode) {
+      loadClusters();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventCode, tab]);
+
   return (
     <section>
       <h2>People</h2>
-      <input
-        placeholder='event code'
-        value={eventCode}
-        onChange={(e) => setEventCode(e.target.value)}
-      />{' '}
       <button onClick={() => setTab('people')}>Identified People</button>{' '}
       <button onClick={() => setTab('search')}>Similarity Search</button>
 

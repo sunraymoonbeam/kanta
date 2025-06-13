@@ -18,6 +18,9 @@ This directory contains a lightweight Next.js UI that mirrors the original Strea
 
 Each page roughly corresponds to the Streamlit tab with similar forms and filters.
 
+The navigation bar includes a drop-down to choose the active event. Once selected,
+all pages automatically use that event code when making API calls.
+
 ## Docker usage
 
 A production `Dockerfile` is included. You can build and run the frontend with Docker directly:
