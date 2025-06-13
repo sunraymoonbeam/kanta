@@ -1,6 +1,8 @@
 import axios, { AxiosResponse } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000/api/v1')  // Client-side
+  : 'http://backend:8000/api/v1';  // Server-side
 
 console.log('API Base URL:', API_BASE_URL);
 

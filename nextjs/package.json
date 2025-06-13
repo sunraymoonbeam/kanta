@@ -7,6 +7,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@types/sharp": "^0.31.1",
     "axios": "1.6.8",
     "debug": "^4.4.1",
     "next": "13.5.11",

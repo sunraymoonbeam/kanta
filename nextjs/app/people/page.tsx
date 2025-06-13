@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { getClusters, Cluster } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { cropAndEncodeFace } from '../../utils/imageCrop';
 
 
 const CLUSTER_ID_UNASSIGNED = -1;
@@ -23,6 +24,7 @@ export default function PeoplePage() {
   const [faceStates, setFaceStates] = useState<CyclingFaceState>({});
   const [faceFilter, setFaceFilter] = useState<number[] | null>(null);
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
+  const [clustersCache, setClustersCache] = useState<{ [key: string]: { data: Cluster[], timestamp: number } }>({});
 
   const applyFaceFilter = (ids: number[] | null) => {
     if (typeof window !== 'undefined') {
@@ -52,13 +54,32 @@ export default function PeoplePage() {
     }
   }, [searchParams]);
 
-  const loadClusters = async () => {
+  const loadClusters = async (forceRefresh = false) => {
     if (!eventCode) return;
+    
+    // Check cache first (5 minutes expiry)
+    const cacheKey = `${eventCode}_5`;
+    const cached = clustersCache[cacheKey];
+    const now = Date.now();
+    const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+    
+    if (!forceRefresh && cached && (now - cached.timestamp) < cacheExpiry) {
+      console.log('Using cached clusters data');
+      setClusters(cached.data);
+      return;
+    }
     
     setLoading(true);
     try {
+      console.log('Fetching fresh clusters data');
       const data = await getClusters(eventCode, 5); // Get 5 samples for cycling
       setClusters(data);
+      
+      // Update cache
+      setClustersCache(prev => ({
+        ...prev,
+        [cacheKey]: { data, timestamp: now }
+      }));
       
       // Initialize face cycling states
       const initialStates: CyclingFaceState = {};
@@ -86,22 +107,23 @@ export default function PeoplePage() {
               typeof sample.sample_bbox.width === 'number' &&
               typeof sample.sample_bbox.height === 'number') {
             try {
-              const params = new URLSearchParams({
-                url: sample.sample_blob_url,
-                x: String(sample.sample_bbox.x),
-                y: String(sample.sample_bbox.y),
-                width: String(sample.sample_bbox.width),
-                height: String(sample.sample_bbox.height),
-                size: '120',
-              });
-              const res = await fetch(`/api/crop?${params.toString()}`);
-              if (res.ok) {
-                const b64 = await res.text();
-                crops[sample.face_id.toString()] = b64;
+              const croppedFaceData = await cropAndEncodeFace(
+                sample.sample_blob_url,
+                {
+                  x: Math.max(0, sample.sample_bbox.x),
+                  y: Math.max(0, sample.sample_bbox.y),
+                  width: Math.max(1, sample.sample_bbox.width),
+                  height: Math.max(1, sample.sample_bbox.height),
+                },
+                [120, 120]
+              );
+              
+              if (croppedFaceData) {
+                crops[sample.face_id.toString()] = croppedFaceData;
                 processedCount++;
               }
             } catch (err) {
-              console.error('Failed to crop face:', err);
+              console.error('Failed to crop face:', sample.face_id, err);
             }
           }
         }
@@ -261,7 +283,7 @@ export default function PeoplePage() {
           flexWrap: 'wrap'
         }}>
           <button
-            onClick={loadClusters}
+            onClick={() => loadClusters(true)}
             disabled={loading}
             style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
