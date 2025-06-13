@@ -7,11 +7,13 @@
     "start": "next start"
   },
   "dependencies": {
+    "@types/sharp": "^0.31.1",
     "axios": "1.6.8",
     "debug": "^4.4.1",
     "next": "13.5.11",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "sharp": "^0.34.2",
     "supports-color": "^10.0.0"
   },
   "devDependencies": {

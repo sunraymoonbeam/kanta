@@ -1,8 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { getImages, getImageDetail, deleteImage, Image, ImagesParams } from '../../lib/api';
+import { getImages, getImageDetail, deleteImage, Image, ImagesParams, ImageDetail } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
-import { cropAndEncodeFace, BoundingBox } from '../../utils/imageCrop';
 
 // Modal component
 function Modal({ isOpen, onClose, title, children }: { 
@@ -65,7 +64,7 @@ function GalleryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
-  const [imageDetail, setImageDetail] = useState<Image | null>(null);
+  const [imageDetail, setImageDetail] = useState<ImageDetail | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
@@ -73,20 +72,36 @@ function GalleryPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
   const [faceFilter, setFaceFilter] = useState<number[] | null>(null);
-  
-  // Add URL search params handling
-  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
+
+  const applyFaceFilter = (ids: number[] | null) => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (ids && ids.length > 0) {
+        params.set('faceFilter', ids.join(','));
+        setFaceFilter(ids);
+      } else {
+        params.delete('faceFilter');
+        setFaceFilter(null);
+      }
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState({}, '', newUrl);
+    } else {
+      setFaceFilter(ids && ids.length > 0 ? ids : null);
+    }
+  };
   
   // Initialize search params on client side only
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      setSearchParams(params);
       
       // Check for face filter from URL params
       const faceFilterParam = params.get('faceFilter');
       if (faceFilterParam) {
-        const clusterIds = faceFilterParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+        const clusterIds = faceFilterParam
+          .split(',')
+          .map(id => parseInt(id.trim()))
+          .filter(id => !isNaN(id));
         if (clusterIds.length > 0) {
           setFaceFilter(clusterIds);
         }
@@ -121,12 +136,14 @@ function GalleryPage() {
       if (filters.endDate) params.date_to = filters.endDate;
       if (filters.minFaces) params.min_faces = parseInt(filters.minFaces);
       if (filters.maxFaces) params.max_faces = parseInt(filters.maxFaces);
-      if (faceFilter !== null) params.cluster_list_id = faceFilter;
+      if (faceFilter && faceFilter.length > 0) {
+        params.cluster_list_id = faceFilter;
+      }
       
       const response = await getImages(params);
       setImages(response.images);
       setTotalCount(response.total_count);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch images:', err);
       setError('Failed to load images. Please try again.');
     } finally {
@@ -139,8 +156,6 @@ function GalleryPage() {
   }, [selected, filters, faceFilter]);
 
   const handleImageClick = async (image: Image) => {
-    console.log('Image clicked:', image.uuid);
-    
     if (selectMode) {
       const newSelected = new Set(selectedImages);
       if (newSelected.has(image.uuid)) {
@@ -156,38 +171,35 @@ function GalleryPage() {
     setLoading(true);
     
     try {
-      console.log('Fetching image detail for:', image.uuid);
       const detail = await getImageDetail(image.uuid);
-      console.log('Image detail received:', detail);
       setImageDetail(detail);
       
       // Generate cropped faces
-      if (detail.face_details && detail.face_details.length > 0) {
-        console.log('Processing', detail.face_details.length, 'faces');
+      if (detail.faces && detail.faces.length > 0) {
         const crops: { [key: string]: string } = {};
-        for (const face of detail.face_details) {
+        for (const face of detail.faces) {
           try {
-            console.log('Cropping face:', face.uuid);
-            const croppedFace = await cropAndEncodeFace(
-              detail.azure_blob_url, 
-              face.bounding_box as BoundingBox, 
-              [100, 100], // target size
-              0.15, // padding ratio x
-              0.15  // padding ratio y
-            );
-            if (croppedFace) {
-              crops[face.uuid] = croppedFace;
-              console.log('Face cropped successfully:', face.uuid);
+            const params = new URLSearchParams({
+              url: detail.image.azure_blob_url,
+              x: String(face.bbox.x),
+              y: String(face.bbox.y),
+              width: String(face.bbox.width),
+              height: String(face.bbox.height),
+            });
+            const res = await fetch(`/api/crop?${params.toString()}`);
+            if (res.ok) {
+              const b64 = await res.json();
+              crops[face.face_id.toString()] = b64;
             }
           } catch (err) {
-            console.error('Failed to crop face:', face.uuid, err);
+            console.error('Failed to crop face:', face.face_id, err);
           }
         }
         setCroppedFaces(crops);
       }
       
       setShowDetailModal(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch image detail:', err);
       setError('Failed to load image details.');
     } finally {
@@ -196,7 +208,13 @@ function GalleryPage() {
   };
 
   const handleDeleteSelected = async () => {
-    const expectedPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password123';
+    // Get admin password from environment variable
+    const expectedPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    
+    if (!expectedPassword) {
+      alert('Admin password not configured');
+      return;
+    }
     
     if (adminPassword !== expectedPassword) {
       alert('Invalid admin password');
@@ -221,7 +239,7 @@ function GalleryPage() {
       setAdminPassword('');
       await fetchImages();
       alert('Selected images deleted successfully!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to delete images:', err);
       alert('Failed to delete some images. Please try again.');
     } finally {
@@ -250,7 +268,30 @@ function GalleryPage() {
   };
 
   const clearFaceFilter = () => {
-    setFaceFilter(null);
+    applyFaceFilter(null);
+  };
+
+  const addToFaceFilter = (clusterId: number) => {
+    const currentFilter = faceFilter || [];
+    if (!currentFilter.includes(clusterId)) {
+      const newFilter = [...currentFilter, clusterId].sort((a, b) => a - b);
+      applyFaceFilter(newFilter);
+    }
+  };
+
+  const removeFromFaceFilter = (clusterId: number) => {
+    const currentFilter = faceFilter || [];
+    const newFilter = currentFilter.filter(id => id !== clusterId);
+    applyFaceFilter(newFilter.length > 0 ? newFilter : null);
+  };
+
+  const toggleFaceFilter = (clusterId: number) => {
+    const currentFilter = faceFilter || [];
+    if (currentFilter.includes(clusterId)) {
+      removeFromFaceFilter(clusterId);
+    } else {
+      addToFaceFilter(clusterId);
+    }
   };
 
   if (!selected) {
@@ -272,6 +313,14 @@ function GalleryPage() {
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       minHeight: '100vh'
     }}>
+      {/* CSS for spinner animation */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
       <div style={{ 
         background: '#fff', 
         borderRadius: '12px', 
@@ -388,30 +437,53 @@ function GalleryPage() {
         </div>
 
         {/* Face Filter Display */}
-        {faceFilter !== null && (
+        {faceFilter && faceFilter.length > 0 && (
           <div style={{
-            background: '#e3f2fd',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            marginBottom: '1.5rem',
+            border: '2px solid #2196f3',
+            boxShadow: '0 4px 12px rgba(33, 150, 243, 0.15)'
           }}>
-            <span>Filtering by people: {faceFilter.join(', ')}</span>
-            <button
-              onClick={clearFaceFilter}
-              style={{
-                background: '#f44336',
-                color: '#fff',
-                border: 'none',
-                padding: '0.5rem 1rem',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Clear Face Filter
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h3 style={{ margin: 0, color: '#1565c0', fontSize: '1.1rem' }}>
+                🔍 People Filter Active
+              </h3>
+              <button
+                onClick={clearFaceFilter}
+                style={{
+                  background: '#f44336',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Clear Filter
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+              <span style={{ color: '#1976d2', fontWeight: 'bold' }}>Showing images with:</span>
+              {faceFilter.map((clusterId) => (
+                <span
+                  key={clusterId}
+                  style={{
+                    background: '#2196f3',
+                    color: '#fff',
+                    padding: '0.3rem 0.8rem',
+                    borderRadius: '15px',
+                    fontSize: '0.85rem',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Person {clusterId}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
@@ -527,7 +599,15 @@ function GalleryPage() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+            <div style={{ 
+              display: 'inline-block', 
+              width: '40px', 
+              height: '40px', 
+              border: '4px solid #f3f3f3', 
+              borderTop: '4px solid #667eea', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite' 
+            }}></div>
             <p style={{ marginTop: '1rem', color: '#666' }}>Loading images...</p>
           </div>
         ) : images.length === 0 ? (
@@ -615,7 +695,7 @@ function GalleryPage() {
             <div>
               <div style={{ marginBottom: '1rem' }}>
                 <img 
-                  src={imageDetail.azure_blob_url}
+                  src={imageDetail.image.azure_blob_url}
                   alt="Full size"
                   style={{
                     width: '100%',
@@ -627,65 +707,84 @@ function GalleryPage() {
               </div>
               
               <div style={{ marginBottom: '1rem' }}>
-                <strong>Faces detected: {imageDetail.faces}</strong>
+                <strong>Faces detected: {imageDetail.image.faces}</strong>
                 <p style={{ color: '#666', fontSize: '0.9rem' }}>
-                  Created: {new Date(imageDetail.created_at).toLocaleString()}
+                  Created: {new Date(imageDetail.image.created_at).toLocaleString()}
                 </p>
               </div>
 
-              {imageDetail.face_details && imageDetail.face_details.length > 0 && (
+              {imageDetail.faces && imageDetail.faces.length > 0 && (
                 <div>
                   <h3>Detected Faces:</h3>
                   <div style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
                     gap: '1rem',
                     marginBottom: '1rem'
                   }}>
-                    {imageDetail.face_details.map((face) => (
-                      <div 
-                        key={face.uuid}
-                        onClick={() => setFaceFilter([face.cluster_id])}
-                        style={{
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          padding: '0.5rem',
-                          border: faceFilter?.includes(face.cluster_id) ? '2px solid #007bff' : '1px solid #ddd',
-                          borderRadius: '8px',
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {croppedFaces[face.uuid] ? (
-                          <img 
-                            src={croppedFaces[face.uuid]}
-                            alt="Cropped face"
-                            style={{
+                    {imageDetail.faces.map((face) => {
+                      const isInFilter = faceFilter?.includes(face.cluster_id) || false;
+                      return (
+                        <div
+                          key={face.face_id}
+                          style={{
+                            textAlign: 'center',
+                            padding: '0.75rem',
+                            border: isInFilter ? '3px solid #007bff' : '2px solid #ddd',
+                            borderRadius: '12px',
+                            transition: 'all 0.3s ease',
+                            background: isInFilter ? '#f8f9ff' : '#fff',
+                            cursor: 'pointer',
+                            transform: isInFilter ? 'scale(1.02)' : 'scale(1)',
+                            boxShadow: isInFilter ? '0 4px 12px rgba(0,123,255,0.2)' : '0 2px 6px rgba(0,0,0,0.1)'
+                          }}
+                          onClick={() => toggleFaceFilter(face.cluster_id)}
+                        >
+                          {croppedFaces[face.face_id.toString()] ? (
+                            <img 
+                              src={croppedFaces[face.face_id.toString()]}
+                              alt="Cropped face"
+                              style={{
+                                width: '100px',
+                                height: '100px',
+                                objectFit: 'cover',
+                                borderRadius: '8px',
+                                marginBottom: '0.5rem'
+                              }}
+                            />
+                          ) : (
+                            <div style={{
                               width: '100px',
                               height: '100px',
-                              objectFit: 'cover',
+                              background: '#f0f0f0',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                               borderRadius: '8px',
-                              marginBottom: '0.5rem'
-                            }}
-                          />
-                        ) : (
-                          <div style={{
-                            width: '100px',
-                            height: '100px',
-                            background: '#f0f0f0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '8px',
-                            marginBottom: '0.5rem'
+                              marginBottom: '0.5rem',
+                              fontSize: '0.8rem',
+                              color: '#666'
+                            }}>
+                              Loading...
+                            </div>
+                          )}
+                          <div style={{ 
+                            fontSize: '0.9rem', 
+                            fontWeight: 'bold',
+                            color: isInFilter ? '#007bff' : '#333',
+                            marginBottom: '0.2rem'
                           }}>
-                            Loading...
+                            Person {face.cluster_id}
                           </div>
-                        )}
-                        <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                          Cluster {face.cluster_id}
+                          <div style={{ 
+                            fontSize: '0.7rem', 
+                            color: isInFilter ? '#007bff' : '#666'
+                          }}>
+                            {isInFilter ? 'In Filter' : 'Click to Filter'}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <p style={{ fontSize: '0.9rem', color: '#666', fontStyle: 'italic' }}>
                     Click on a face to filter gallery by similar faces

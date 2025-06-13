@@ -10,9 +10,9 @@ export interface BoundingBox {
 export async function cropAndEncodeFace(
   imageUrl: string,
   bbox: BoundingBox,
-  targetSize: [number, number] = [60, 60],
-  padXRatio: number = 0.3,
-  padYRatio: number = 0.3
+  targetSize: [number, number] = [120, 120],
+  padXRatio: number = 0.15,
+  padYRatio: number = 0.15
 ): Promise<string | null> {
   try {
     // Fetch the image with proper CORS handling
