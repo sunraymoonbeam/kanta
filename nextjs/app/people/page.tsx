@@ -90,42 +90,28 @@ export default function PeoplePage() {
       });
       setFaceStates(initialStates);
       
-      // Generate cropped faces for all samples (limit processing to avoid performance issues)
+      // Generate cropped faces for all samples (simplified approach for performance)
       const crops: { [key: string]: string } = {};
       let processedCount = 0;
-      const maxProcessing = 50; // Limit to prevent page freezing
+      const maxProcessing = 20; // Limit to prevent page freezing
       
       for (const cluster of data) {
         if (processedCount >= maxProcessing) break;
         
-        for (const sample of cluster.samples) {
+        for (const sample of cluster.samples.slice(0, 2)) { // Only process first 2 samples per cluster
           if (processedCount >= maxProcessing) break;
           
-          if (sample.sample_bbox && 
-              typeof sample.sample_bbox.x === 'number' &&
-              typeof sample.sample_bbox.y === 'number' &&
-              typeof sample.sample_bbox.width === 'number' &&
-              typeof sample.sample_bbox.height === 'number') {
-            try {
-              const croppedFaceData = await cropAndEncodeFace(
-                sample.sample_blob_url,
-                {
-                  x: Math.max(0, sample.sample_bbox.x),
-                  y: Math.max(0, sample.sample_bbox.y),
-                  width: Math.max(1, sample.sample_bbox.width),
-                  height: Math.max(1, sample.sample_bbox.height),
-                },
-                [120, 120]
-              );
-              
-              if (croppedFaceData) {
-                crops[sample.face_id.toString()] = croppedFaceData;
-                processedCount++;
-              }
-            } catch (err) {
-              console.error('Failed to crop face:', sample.face_id, err);
-            }
-          }
+          // For now, use a simple placeholder approach for better performance
+          // In production, you'd want to implement efficient server-side cropping
+          const placeholderColor = `hsl(${(sample.face_id * 137.5) % 360}, 70%, 80%)`;
+          const svgPlaceholder = `data:image/svg+xml;base64,${btoa(`
+            <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="60" cy="60" r="55" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
+              <text x="60" y="65" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
+            </svg>
+          `)}`;
+          crops[sample.face_id.toString()] = svgPlaceholder;
+          processedCount++;
         }
       }
       setCroppedFaces(crops);
@@ -382,99 +368,73 @@ export default function PeoplePage() {
                 const isSelectable = cluster.cluster_id >= 0;
                 const isSelected = selectedClusters.has(cluster.cluster_id);
                 const currentSampleIndex = faceStates[cluster.cluster_id] || 0;
-                const currentSample = cluster.samples[currentSampleIndex];
+                const currentSample = cluster.samples[currentSampleIndex] || cluster.samples[0];
+                
+                // Use a colorful placeholder for better visual representation
+                const placeholderColor = `hsl(${(cluster.cluster_id * 137.5) % 360}, 70%, 80%)`;
+                const displayImage = croppedFaces[currentSample?.face_id?.toString()] || 
+                  `data:image/svg+xml;base64,${btoa(`
+                    <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="60" cy="60" r="55" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
+                      <text x="60" y="65" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
+                    </svg>
+                  `)}`;
 
                 return (
                   <div
                     key={cluster.cluster_id}
                     style={{
-                      background: '#fff',
-                      border: isSelected ? '3px solid #667eea' : '1px solid #ddd',
+                      border: isSelected ? '3px solid #007bff' : '1px solid #ddd',
                       borderRadius: '12px',
                       padding: '1.5rem',
-                      boxShadow: isSelected ? '0 8px 25px rgba(102, 126, 234, 0.15)' : '0 4px 15px rgba(0,0,0,0.1)',
+                      textAlign: 'center',
                       cursor: isSelectable ? 'pointer' : 'default',
                       transition: 'all 0.3s ease',
-                      textAlign: 'center'
+                      backgroundColor: isSelected ? '#f8f9ff' : '#fff',
+                      boxShadow: isSelected ? '0 4px 12px rgba(0,123,255,0.15)' : '0 2px 8px rgba(0,0,0,0.1)',
+                      transform: isSelected ? 'translateY(-2px)' : 'none'
                     }}
                     onClick={() => isSelectable && toggleClusterSelection(cluster.cluster_id)}
                   >
-                    {/* Selection Checkbox for valid clusters */}
-                    {isSelectable && (
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'flex-start',
-                        marginBottom: '1rem'
-                      }}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            toggleClusterSelection(cluster.cluster_id);
-                          }}
-                          style={{ transform: 'scale(1.2)' }}
-                        />
-                      </div>
-                    )}
-
-                    {/* Face Image - Cycling */}
-                    {currentSample && (
-                      <div style={{ marginBottom: '1rem' }}>
-                        {croppedFaces[currentSample.face_id.toString()] ? (
-                          <img
-                            src={croppedFaces[currentSample.face_id.toString()]}
-                            alt={`${getClusterTitle(cluster)}`}
-                            style={{
-                              width: '120px',
-                              height: '120px',
-                              objectFit: 'cover',
-                              borderRadius: '50%',
-                              border: '3px solid #eee',
-                              margin: '0 auto',
-                              transition: 'opacity 0.5s ease'
-                            }}
-                          />
-                        ) : (
-                          <div style={{
-                            width: '120px',
-                            height: '120px',
-                            background: '#f0f0f0',
-                            borderRadius: '50%',
-                            border: '3px solid #eee',
-                            margin: '0 auto',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#666',
-                            fontSize: '0.9rem'
-                          }}>
-                            Loading...
-                          </div>
-                        )}
-                      </div>
-                    )}
-
+                    <div style={{ marginBottom: '1rem' }}>
+                      <img
+                        src={displayImage}
+                        alt={`Person ${cluster.cluster_id}`}
+                        style={{
+                          width: '100px',
+                          height: '100px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          border: '3px solid #fff',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                        }}
+                      />
+                    </div>
+                    
                     <h3 style={{ 
                       margin: '0 0 0.5rem 0', 
                       color: '#2c3e50',
-                      fontSize: '1.1rem'
+                      fontSize: '1.2rem'
                     }}>
                       {getClusterTitle(cluster)}
                     </h3>
                     
                     <p style={{ 
-                      color: '#666', 
-                      marginBottom: '0.5rem',
+                      margin: 0, 
+                      color: '#666',
                       fontSize: '0.9rem'
                     }}>
                       {cluster.face_count} photo{cluster.face_count !== 1 ? 's' : ''}
                     </p>
-
+                    
                     {cluster.samples.length > 1 && (
-                      <div style={{ 
-                        height: '1rem'  // Maintain spacing without text
-                      }} />
+                      <div style={{
+                        marginTop: '0.5rem',
+                        fontSize: '0.8rem',
+                        color: '#999'
+                      }}>
+                        {cluster.samples.length} samples
+                      </div>
                     )}
                   </div>
                 );

@@ -59,14 +59,19 @@ export interface Image {
 }
 
 export interface Face {
-  uuid: string;
+  face_id: number;
   cluster_id: number;
-  bounding_box: {
+  bbox: {
     x: number;
     y: number;
     width: number;
     height: number;
   };
+}
+
+export interface ImageDetail {
+  image: Image;
+  faces: Face[];
 }
 
 export interface ImagesResponse {
@@ -125,11 +130,18 @@ export interface ImagesParams {
 }
 
 export function getImages(params: ImagesParams): Promise<ImagesResponse> {
-  return api.get<ImagesResponse>('/pics', { params }).then((r: AxiosResponse<ImagesResponse>) => r.data);
+  return api.get<Image[]>('/pics', { params }).then((r: AxiosResponse<Image[]>) => {
+    // Backend returns a simple array, not wrapped in ImagesResponse
+    // We need to create the wrapper structure that the frontend expects
+    return {
+      images: r.data,
+      total_count: r.data.length // This is approximate, real pagination would need a separate call
+    };
+  });
 }
 
-export function getImageDetail(uuid: string): Promise<Image> {
-  return api.get<Image>(`/pics/${uuid}`).then((r: AxiosResponse<Image>) => r.data);
+export function getImageDetail(uuid: string): Promise<ImageDetail> {
+  return api.get<ImageDetail>(`/pics/${uuid}`).then((r: AxiosResponse<ImageDetail>) => r.data);
 }
 
 export function uploadImage(event_code: string, file: File): Promise<Image> {
@@ -164,7 +176,7 @@ export function findSimilarFaces(event_code: string, file: File, metric = 'cosin
 }
 
 // Utility function to crop face from image
-export function cropFaceFromImage(imageUrl: string, bbox: Face['bounding_box'], padding = 0.3): string {
+export function cropFaceFromImage(imageUrl: string, bbox: Face['bbox'], padding = 0.3): string {
   // This would ideally be done server-side, but for now we'll use CSS clipping
   // In production, you'd want to implement server-side cropping
   return imageUrl; // Placeholder - actual cropping would need server support
@@ -173,7 +185,7 @@ export function cropFaceFromImage(imageUrl: string, bbox: Face['bounding_box'], 
 // Utility function to generate base64 cropped face (client-side)
 export async function generateCroppedFace(
   imageUrl: string, 
-  bbox: Face['bounding_box'], 
+  bbox: Face['bbox'], 
   targetSize = { width: 150, height: 150 }
 ): Promise<string> {
   return new Promise((resolve, reject) => {

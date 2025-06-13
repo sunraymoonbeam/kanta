@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { getImages, getImageDetail, deleteImage, Image, ImagesParams } from '../../lib/api';
+import { getImages, getImageDetail, deleteImage, Image, ImagesParams, ImageDetail } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 
 
@@ -65,7 +65,7 @@ function GalleryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
-  const [imageDetail, setImageDetail] = useState<Image | null>(null);
+  const [imageDetail, setImageDetail] = useState<ImageDetail | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
@@ -182,25 +182,25 @@ function GalleryPage() {
       setImageDetail(detail);
       
       // Generate cropped faces
-      if (detail.face_details && detail.face_details.length > 0) {
-        console.log('Processing', detail.face_details.length, 'faces');
+      if (detail.faces && detail.faces.length > 0) {
+        console.log('Processing', detail.faces.length, 'faces');
         const crops: { [key: string]: string } = {};
-        for (const face of detail.face_details) {
+        for (const face of detail.faces) {
           try {
             const params = new URLSearchParams({
-              url: detail.azure_blob_url,
-              x: String(face.bounding_box.x),
-              y: String(face.bounding_box.y),
-              width: String(face.bounding_box.width),
-              height: String(face.bounding_box.height),
+              url: detail.image.azure_blob_url,
+              x: String(face.bbox.x),
+              y: String(face.bbox.y),
+              width: String(face.bbox.width),
+              height: String(face.bbox.height),
             });
             const res = await fetch(`/api/crop?${params.toString()}`);
             if (res.ok) {
-              const b64 = await res.text();
-              crops[face.uuid] = b64;
+              const b64 = await res.json();
+              crops[face.face_id.toString()] = b64;
             }
           } catch (err) {
-            console.error('Failed to crop face:', face.uuid, err);
+            console.error('Failed to crop face:', face.face_id, err);
           }
         }
         setCroppedFaces(crops);
@@ -635,7 +635,7 @@ function GalleryPage() {
             <div>
               <div style={{ marginBottom: '1rem' }}>
                 <img 
-                  src={imageDetail.azure_blob_url}
+                  src={imageDetail.image.azure_blob_url}
                   alt="Full size"
                   style={{
                     width: '100%',
@@ -647,13 +647,13 @@ function GalleryPage() {
               </div>
               
               <div style={{ marginBottom: '1rem' }}>
-                <strong>Faces detected: {imageDetail.faces}</strong>
+                <strong>Faces detected: {imageDetail.image.faces}</strong>
                 <p style={{ color: '#666', fontSize: '0.9rem' }}>
-                  Created: {new Date(imageDetail.created_at).toLocaleString()}
+                  Created: {new Date(imageDetail.image.created_at).toLocaleString()}
                 </p>
               </div>
 
-              {imageDetail.face_details && imageDetail.face_details.length > 0 && (
+              {imageDetail.faces && imageDetail.faces.length > 0 && (
                 <div>
                   <h3>Detected Faces:</h3>
                   <div style={{ 
@@ -662,9 +662,9 @@ function GalleryPage() {
                     gap: '1rem',
                     marginBottom: '1rem'
                   }}>
-                    {imageDetail.face_details.map((face) => (
+                    {imageDetail.faces.map((face) => (
                       <div
-                        key={face.uuid}
+                        key={face.face_id}
                         onClick={() => applyFaceFilter([face.cluster_id])}
                         style={{
                           textAlign: 'center',
@@ -675,9 +675,9 @@ function GalleryPage() {
                           transition: 'all 0.3s ease'
                         }}
                       >
-                        {croppedFaces[face.uuid] ? (
+                        {croppedFaces[face.face_id.toString()] ? (
                           <img 
-                            src={croppedFaces[face.uuid]}
+                            src={croppedFaces[face.face_id.toString()]}
                             alt="Cropped face"
                             style={{
                               width: '100px',
@@ -702,7 +702,7 @@ function GalleryPage() {
                           </div>
                         )}
                         <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                          Cluster {face.cluster_id}
+                          Person {face.cluster_id}
                         </div>
                       </div>
                     ))}
