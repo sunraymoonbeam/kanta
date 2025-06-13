@@ -1,10 +1,10 @@
 import React from 'react';
-import NextImage from 'next/image';
-import { Image } from '../../types/images';
+import Image from 'next/image';
+import { Image as ImageType } from '../../types/images';
 
 interface ImageGridProps {
-  images: Image[];
-  onImageClick: (image: Image) => void;
+  images: ImageType[];
+  onImageClick: (image: ImageType) => void;
   selectedImages?: Set<string>;
   loading?: boolean;
   emptyMessage?: string;
@@ -53,12 +53,13 @@ export default function ImageGrid({
           }`}
           onClick={() => onImageClick(image)}
         >
-          <NextImage
+          <Image
             src={image.azure_blob_url}
             alt={`Image ${image.uuid}`}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            unoptimized
           />
           
           {/* Face count indicator */}

@@ -247,69 +247,139 @@ export default function EventsPage() {
               <Card 
                 key={event.code}
                 style={{
-                  border: event.code === selected ? '2px solid #667eea' : '1px solid #e5e7eb',
-                  background: event.code === selected ? '#f8faff' : '#fff',
-                  transition: 'all 0.3s ease'
+                  padding: '2rem',
+                  marginBottom: '1.5rem',
+                  background: event.code === selected 
+                    ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' 
+                    : 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
+                  border: event.code === selected 
+                    ? '2px solid #0ea5e9' 
+                    : '1px solid #e5e7eb',
+                  borderRadius: '20px',
+                  boxShadow: event.code === selected 
+                    ? '0 20px 60px rgba(14, 165, 233, 0.15), 0 8px 25px rgba(0,0,0,0.1)' 
+                    : '0 10px 40px rgba(0,0,0,0.08)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
                 hoverable
+                onMouseEnter={(e) => {
+                  if (event.code !== selected) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 15px 50px rgba(0,0,0,0.12)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (event.code !== selected) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.08)';
+                  }
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1.5rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                      <h2 style={{ 
-                        margin: 0, 
-                        color: '#1f2937', 
-                        fontSize: '1.5rem',
-                        fontWeight: 'bold'
-                      }}>
-                        {event.name}
-                      </h2>
-                      <div style={{ 
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: '#fff',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        fontWeight: 'bold',
-                        fontFamily: 'monospace',
-                        letterSpacing: '1px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                      }}>
-                        {event.code}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '2rem' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Event Header with enhanced styling */}
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                        <h2 style={{ 
+                          margin: 0, 
+                          color: '#1f2937', 
+                          fontSize: '2rem',
+                          fontWeight: '700',
+                          lineHeight: '1.2',
+                          flex: '1 1 auto',
+                          minWidth: '200px'
+                        }}>
+                          {event.name}
+                        </h2>
+                        <div style={{ 
+                          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%)',
+                          color: '#fff',
+                          padding: '0.75rem 1.25rem',
+                          borderRadius: '12px',
+                          fontSize: '1.1rem',
+                          fontWeight: '700',
+                          fontFamily: 'monospace',
+                          letterSpacing: '2px',
+                          boxShadow: '0 4px 20px rgba(79, 70, 229, 0.3)',
+                          border: '2px solid rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(10px)',
+                          textTransform: 'uppercase'
+                        }}>
+                          {event.code}
+                        </div>
                       </div>
                     </div>
                     
+                    {/* Enhanced Description */}
                     {event.description && (
-                      <p style={{ 
-                        margin: '0 0 1rem 0', 
-                        color: '#6b7280',
-                        fontSize: '1rem',
-                        lineHeight: '1.5'
-                      }}>
-                        {event.description}
-                      </p>
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <p style={{ 
+                          margin: 0, 
+                          color: '#4b5563',
+                          fontSize: '1.1rem',
+                          lineHeight: '1.6',
+                          padding: '1rem',
+                          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                          borderRadius: '12px',
+                          border: '1px solid #e2e8f0',
+                          fontWeight: '400'
+                        }}>
+                          {event.description}
+                        </p>
+                      </div>
                     )}
                     
+                    {/* Enhanced Date/Time Display */}
                     <div style={{ 
-                      display: 'flex', 
-                      gap: '2rem', 
-                      fontSize: '0.9rem', 
-                      color: '#9ca3af',
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+                      gap: '1rem', 
                       marginBottom: '1.5rem' 
                     }}>
-                      <div>
-                        <strong>Start:</strong> {formatDateTime(event.start_date_time)}
+                      <div style={{
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        color: '#fff',
+                        padding: '1rem',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 20px rgba(16, 185, 129, 0.2)'
+                      }}>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.25rem', fontWeight: '600' }}>
+                          🎯 EVENT STARTS
+                        </div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '700' }}>
+                          {formatDateTime(event.start_date_time)}
+                        </div>
                       </div>
-                      <div>
-                        <strong>End:</strong> {formatDateTime(event.end_date_time)}
+                      <div style={{
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        color: '#fff',
+                        padding: '1rem',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 20px rgba(245, 158, 11, 0.2)'
+                      }}>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.25rem', fontWeight: '600' }}>
+                          🏁 EVENT ENDS
+                        </div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '700' }}>
+                          {formatDateTime(event.end_date_time)}
+                        </div>
                       </div>
                     </div>
                     
+                    {/* Enhanced Action Buttons */}
                     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                       <Button
                         onClick={() => openModal('details', event)}
                         variant="primary"
                         size="sm"
+                        style={{
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                          border: 'none',
+                          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                          fontWeight: '600'
+                        }}
                       >
                         📄 Details
                       </Button>
@@ -318,6 +388,12 @@ export default function EventsPage() {
                         onClick={() => openModal('edit', event)}
                         variant="warning"
                         size="sm"
+                        style={{
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                          border: 'none',
+                          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                          fontWeight: '600'
+                        }}
                       >
                         ✏️ Edit
                       </Button>
@@ -326,6 +402,12 @@ export default function EventsPage() {
                         onClick={() => openModal('delete', event)}
                         variant="danger"
                         size="sm"
+                        style={{
+                          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                          border: 'none',
+                          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                          fontWeight: '600'
+                        }}
                       >
                         🗑️ Delete
                       </Button>
@@ -334,25 +416,121 @@ export default function EventsPage() {
                         onClick={() => setSelected(event.code)}
                         variant={event.code === selected ? "success" : "secondary"}
                         size="sm"
+                        style={{
+                          background: event.code === selected 
+                            ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                            : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                          border: 'none',
+                          boxShadow: event.code === selected 
+                            ? '0 4px 12px rgba(16, 185, 129, 0.3)' 
+                            : '0 4px 12px rgba(107, 114, 128, 0.3)',
+                          fontWeight: '600'
+                        }}
                       >
                         {event.code === selected ? '✓ Selected' : '📌 Select'}
                       </Button>
                     </div>
                   </div>
                   
+                  {/* Enhanced Event Image Display */}
                   {event.event_image_url && (
-                    <div style={{ flexShrink: 0 }}>
+                    <div style={{ 
+                      flexShrink: 0,
+                      position: 'relative',
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+                      background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+                      padding: '6px'
+                    }}>
                       <img 
                         src={event.event_image_url} 
-                        alt="Event"
+                        alt={`${event.name} Event`}
                         style={{ 
-                          width: '120px', 
-                          height: '120px', 
-                          objectFit: 'cover', 
-                          borderRadius: '12px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                          width: '280px', 
+                          height: '280px', 
+                          objectFit: 'cover',
+                          borderRadius: '16px',
+                          transition: 'transform 0.3s ease',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.02)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                        onClick={() => {
+                          // Open image in new tab for full view
+                          window.open(event.event_image_url, '_blank');
                         }}
                       />
+                      {/* Image overlay with upload button */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        borderRadius: '8px',
+                        padding: '6px'
+                      }}>
+                        <Button
+                          onClick={() => {
+                            // Trigger image upload modal
+                            setSelectedEvent(event);
+                            setModalType('edit'); // This will allow image upload via edit modal
+                          }}
+                          size="sm"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'white',
+                            fontSize: '1rem',
+                            padding: '4px 8px',
+                            minWidth: 'auto'
+                          }}
+                          title="Change event image"
+                        >
+                          📷
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* No Image Placeholder with Upload Option */}
+                  {!event.event_image_url && (
+                    <div style={{ 
+                      flexShrink: 0,
+                      width: '280px', 
+                      height: '280px',
+                      background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+                      borderRadius: '20px',
+                      border: '2px dashed #d1d5db',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '1rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setModalType('edit');
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#9ca3af';
+                      e.currentTarget.style.background = 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#d1d5db';
+                      e.currentTarget.style.background = 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)';
+                    }}
+                    >
+                      <div style={{ fontSize: '3rem', color: '#9ca3af' }}>📷</div>
+                      <div style={{ color: '#6b7280', fontWeight: '600', textAlign: 'center' }}>
+                        Click to add<br />event image
+                      </div>
                     </div>
                   )}
                 </div>

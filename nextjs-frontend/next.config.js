@@ -9,17 +9,13 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '*.blob.core.windows.net',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.azureedge.net',
+        hostname: 'kantafresh.blob.core.windows.net',
+        port: '',
+        pathname: '/**',
       },
     ],
+    unoptimized: false,
   },
 };
+
 module.exports = nextConfig;

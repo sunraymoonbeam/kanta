@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import NextImage from 'next/image';
+import Image from 'next/image';
 import { getClusters } from '../../lib/api';
 import { useEvents } from '../../hooks/useEvents';
 import { Cluster, CyclingFaceState, CacheEntry } from '../../types/people';
@@ -26,6 +26,8 @@ export default function PeoplePage() {
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
   const [clustersCache, setClustersCache] = useState<{ [key: string]: CacheEntry }>({});
   const [cropError, setCropError] = useState<Set<string>>(new Set());
+  const [unidentifiedCount, setUnidentifiedCount] = useState(0);
+  const [processingCount, setProcessingCount] = useState(0);
 
   // Memoized function to apply face filter
   const applyFaceFilter = useCallback((ids: number[] | null) => {
@@ -91,6 +93,13 @@ export default function PeoplePage() {
     setLoading(true);
     try {
       const data = await getClusters(eventCode, NUM_CLUSTER_SAMPLES);
+      
+      // Count special clusters
+      const unidentified = data.find(cluster => cluster.cluster_id === CLUSTER_ID_UNASSIGNED);
+      const processing = data.find(cluster => cluster.cluster_id === CLUSTER_ID_PROCESSING);
+      
+      setUnidentifiedCount(unidentified?.face_count || 0);
+      setProcessingCount(processing?.face_count || 0);
       
       // Filter out special clusters and sort by face count
       const validClusters = data
@@ -244,6 +253,22 @@ export default function PeoplePage() {
         <p className="text-center text-gray-600 text-lg">
           AI-detected people from <strong>{eventCode}</strong>
         </p>
+        
+        {/* Special clusters info */}
+        {(unidentifiedCount > 0 || processingCount > 0) && (
+          <div className="mt-4 flex justify-center gap-4 text-sm">
+            {unidentifiedCount > 0 && (
+              <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">
+                {unidentifiedCount} unidentified faces
+              </div>
+            )}
+            {processingCount > 0 && (
+              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                {processingCount} processing faces
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {clusters.length === 0 ? (
@@ -326,12 +351,13 @@ export default function PeoplePage() {
                     {/* Face Display */}
                     <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
                       {croppedFace ? (
-                        <NextImage
+                        <Image
                           src={croppedFace}
                           alt={`Person ${cluster.cluster_id}`}
                           width={128}
                           height={128}
                           className="w-full h-full object-cover"
+                          unoptimized
                         />
                       ) : (
                         <div className="text-5xl text-gray-400">
