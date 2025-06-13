@@ -30,7 +30,7 @@ services:
   streamlit-frontend:
     image: kanta.azurecr.io/streamlit-frontend:latest
     build:
-      context: ./frontend
+      context: ./streamlit-frontend
       dockerfile: Dockerfile
     platform: linux/amd64
     command: ["streamlit", "run", "Home.py"]
@@ -61,7 +61,7 @@ services:
   nextjs-frontend:
     image: kanta.azurecr.io/nextjs-frontend:latest
     build:
-      context: ./nextjs
+      context: ./nextjs-frontend
       dockerfile: Dockerfile
     platform: linux/amd64
     command: ["npm", "run", "start"]
