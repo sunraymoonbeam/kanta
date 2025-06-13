@@ -27,21 +27,48 @@ services:
           path: ./backend/src/app
           target: /app/src/app
 
-  frontend:
-    image: kanta.azurecr.io/frontend:latest
+  # streamlit-frontend:
+  #   image: kanta.azurecr.io/streamlit-frontend:latest
+  #   build:
+  #     context: ./streamlit-frontend
+  #     dockerfile: Dockerfile
+  #   platform: linux/amd64
+  #   command: ["streamlit", "run", "Home.py"]
+  #   ports:
+  #     - 8501:8501
+  #   environment:
+  #     - STREAMLIT_SERVER_PORT=8501
+  #     - BACKEND_SERVER_URL=http://backend:8000/api/v1
+  #     - ADMIN_PASSWORD=password123
+  #   volumes:
+  #     - ./frontend/assets:/app/assets
+  #   depends_on:
+  #     backend:
+  #       condition: service_healthy
+  #       restart: true
+  #   develop:
+  #     watch:
+  #       - action: sync
+  #         path: ./frontend/Home.py
+  #         target: /app/Home.py
+  #       - action: sync
+  #         path: ./frontend/pages
+  #         target: /app/pages
+  #       - action: sync
+  #         path: ./frontend/utils
+  #         target: /app/utils
+
+  nextjs-frontend:
+    image: kanta.azurecr.io/nextjs-frontend:latest
     build:
-      context: ./frontend
+      context: ./nextjs-frontend
       dockerfile: Dockerfile
     platform: linux/amd64
-    command: ["streamlit", "run", "Home.py"]
+    command: ["npm", "run", "start"]
     ports:
-      - 8501:8501
+      - 3000:3000
     environment:
-      - STREAMLIT_SERVER_PORT=8501
-      - BACKEND_SERVER_URL=http://backend:8000/api/v1
-      - ADMIN_PASSWORD=password123
-    volumes:
-      - ./frontend/assets:/app/assets
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8000/api/v1
     depends_on:
       backend:
         condition: service_healthy
@@ -49,14 +76,23 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./frontend/Home.py
-          target: /app/Home.py
+          path: ./nextjs-frontend/app
+          target: /app/app
         - action: sync
-          path: ./frontend/pages
-          target: /app/pages
+          path: ./nextjs-frontend/components
+          target: /app/components
         - action: sync
-          path: ./frontend/utils
-          target: /app/utils
+          path: ./nextjs-frontend/hooks
+          target: /app/hooks
+        - action: sync
+          path: ./nextjs-frontend/lib
+          target: /app/lib
+        - action: sync
+          path: ./nextjs-frontend/types
+          target: /app/types
+        - action: sync
+          path: ./nextjs-frontend/styles
+          target: /app/styles
 
 networks:
   default:
