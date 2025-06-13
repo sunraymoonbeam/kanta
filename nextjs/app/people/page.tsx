@@ -171,6 +171,7 @@ export default function PeoplePage() {
     
     // Navigate to gallery with face filter
     const clusterIds = Array.from(selectedClusters).join(',');
+    console.log('Navigating to gallery with cluster IDs:', clusterIds);
     router.push(`/gallery?faceFilter=${clusterIds}`);
   };
 

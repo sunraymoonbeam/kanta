@@ -130,7 +130,28 @@ export interface ImagesParams {
 }
 
 export function getImages(params: ImagesParams): Promise<ImagesResponse> {
-  return api.get<Image[]>('/pics', { params }).then((r: AxiosResponse<Image[]>) => {
+  // Build query parameters - axios will handle array serialization correctly
+  const queryParams: any = {};
+  
+  // Add all non-array parameters
+  Object.entries(params).forEach(([key, value]) => {
+    if (key !== 'cluster_list_id' && value !== undefined && value !== null) {
+      queryParams[key] = value;
+    }
+  });
+  
+  // Handle cluster_list_id array parameter - axios will serialize array as multiple params
+  if (params.cluster_list_id && params.cluster_list_id.length > 0) {
+    queryParams.cluster_list_id = params.cluster_list_id;
+  }
+  
+  return api.get<Image[]>('/pics', { 
+    params: queryParams,
+    paramsSerializer: {
+      // This ensures arrays are serialized as multiple params with the same name
+      indexes: null // This makes cluster_list_id=1&cluster_list_id=2 instead of cluster_list_id[0]=1&cluster_list_id[1]=2
+    }
+  }).then((r: AxiosResponse<Image[]>) => {
     // Backend returns a simple array, not wrapped in ImagesResponse
     // We need to create the wrapper structure that the frontend expects
     return {

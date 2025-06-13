@@ -102,12 +102,15 @@ function GalleryPage() {
       
       // Check for face filter from URL params
       const faceFilterParam = params.get('faceFilter');
+      console.log('URL faceFilterParam:', faceFilterParam);
       if (faceFilterParam) {
         const clusterIds = faceFilterParam
           .split(',')
           .map(id => parseInt(id.trim()))
           .filter(id => !isNaN(id));
+        console.log('Parsed cluster IDs:', clusterIds);
         if (clusterIds.length > 0) {
+          console.log('Setting face filter to:', clusterIds);
           setFaceFilter(clusterIds);
         }
       }
@@ -141,9 +144,14 @@ function GalleryPage() {
       if (filters.endDate) params.date_to = filters.endDate;
       if (filters.minFaces) params.min_faces = parseInt(filters.minFaces);
       if (filters.maxFaces) params.max_faces = parseInt(filters.maxFaces);
-      if (faceFilter !== null) params.cluster_list_id = faceFilter;
+      if (faceFilter !== null && faceFilter.length > 0) {
+        params.cluster_list_id = faceFilter;
+        console.log('Applied face filter:', faceFilter);
+      }
       
+      console.log('API params:', params);
       const response = await getImages(params);
+      console.log('API response:', response);
       setImages(response.images);
       setTotalCount(response.total_count);
     } catch (err: any) {
