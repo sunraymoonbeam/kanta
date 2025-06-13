@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { getClusters, Cluster } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { cropAndEncodeFace, BoundingBox } from '../../utils/imageCrop';
+
 
 const CLUSTER_ID_UNASSIGNED = -1;
 const CLUSTER_ID_PROCESSING = -2;
@@ -23,6 +23,23 @@ export default function PeoplePage() {
   const [faceStates, setFaceStates] = useState<CyclingFaceState>({});
   const [faceFilter, setFaceFilter] = useState<number[] | null>(null);
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
+
+  const applyFaceFilter = (ids: number[] | null) => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (ids && ids.length > 0) {
+        params.set('faceFilter', ids.join(','));
+        setFaceFilter(ids);
+      } else {
+        params.delete('faceFilter');
+        setFaceFilter(null);
+      }
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState({}, '', newUrl);
+    } else {
+      setFaceFilter(ids && ids.length > 0 ? ids : null);
+    }
+  };
 
   // Check for face filter from URL params
   useEffect(() => {
@@ -69,15 +86,18 @@ export default function PeoplePage() {
               typeof sample.sample_bbox.width === 'number' &&
               typeof sample.sample_bbox.height === 'number') {
             try {
-              const croppedFace = await cropAndEncodeFace(
-                sample.sample_blob_url,
-                sample.sample_bbox as BoundingBox,
-                [120, 120], // target size
-                0.15, // padding ratio x
-                0.15  // padding ratio y
-              );
-              if (croppedFace) {
-                crops[sample.face_id.toString()] = croppedFace;
+              const params = new URLSearchParams({
+                url: sample.sample_blob_url,
+                x: String(sample.sample_bbox.x),
+                y: String(sample.sample_bbox.y),
+                width: String(sample.sample_bbox.width),
+                height: String(sample.sample_bbox.height),
+                size: '120',
+              });
+              const res = await fetch(`/api/crop?${params.toString()}`);
+              if (res.ok) {
+                const b64 = await res.text();
+                crops[sample.face_id.toString()] = b64;
                 processedCount++;
               }
             } catch (err) {
@@ -120,13 +140,7 @@ export default function PeoplePage() {
   };
 
   const clearFaceFilter = () => {
-    setFaceFilter(null);
-    // Remove faceFilter from URL
-    if (typeof window !== 'undefined') {
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('faceFilter');
-      window.history.replaceState({}, '', newUrl.toString());
-    }
+    applyFaceFilter(null);
   };
 
   const getClusterTitle = (cluster: Cluster) => {

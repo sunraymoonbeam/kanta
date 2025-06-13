@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getImages, getImageDetail, deleteImage, Image, ImagesParams } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
-import { cropAndEncodeFace, BoundingBox } from '../../utils/imageCrop';
+
 
 // Modal component
 function Modal({ isOpen, onClose, title, children }: { 
@@ -73,6 +73,23 @@ function GalleryPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
   const [faceFilter, setFaceFilter] = useState<number[] | null>(null);
+
+  const applyFaceFilter = (ids: number[] | null) => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (ids && ids.length > 0) {
+        params.set('faceFilter', ids.join(','));
+        setFaceFilter(ids);
+      } else {
+        params.delete('faceFilter');
+        setFaceFilter(null);
+      }
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState({}, '', newUrl);
+    } else {
+      setFaceFilter(ids && ids.length > 0 ? ids : null);
+    }
+  };
   
   // Add URL search params handling
   const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
@@ -86,7 +103,10 @@ function GalleryPage() {
       // Check for face filter from URL params
       const faceFilterParam = params.get('faceFilter');
       if (faceFilterParam) {
-        const clusterIds = faceFilterParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+        const clusterIds = faceFilterParam
+          .split(',')
+          .map(id => parseInt(id.trim()))
+          .filter(id => !isNaN(id));
         if (clusterIds.length > 0) {
           setFaceFilter(clusterIds);
         }
@@ -167,17 +187,17 @@ function GalleryPage() {
         const crops: { [key: string]: string } = {};
         for (const face of detail.face_details) {
           try {
-            console.log('Cropping face:', face.uuid);
-            const croppedFace = await cropAndEncodeFace(
-              detail.azure_blob_url, 
-              face.bounding_box as BoundingBox, 
-              [100, 100], // target size
-              0.15, // padding ratio x
-              0.15  // padding ratio y
-            );
-            if (croppedFace) {
-              crops[face.uuid] = croppedFace;
-              console.log('Face cropped successfully:', face.uuid);
+            const params = new URLSearchParams({
+              url: detail.azure_blob_url,
+              x: String(face.bounding_box.x),
+              y: String(face.bounding_box.y),
+              width: String(face.bounding_box.width),
+              height: String(face.bounding_box.height),
+            });
+            const res = await fetch(`/api/crop?${params.toString()}`);
+            if (res.ok) {
+              const b64 = await res.text();
+              crops[face.uuid] = b64;
             }
           } catch (err) {
             console.error('Failed to crop face:', face.uuid, err);
@@ -250,7 +270,7 @@ function GalleryPage() {
   };
 
   const clearFaceFilter = () => {
-    setFaceFilter(null);
+    applyFaceFilter(null);
   };
 
   if (!selected) {
@@ -643,9 +663,9 @@ function GalleryPage() {
                     marginBottom: '1rem'
                   }}>
                     {imageDetail.face_details.map((face) => (
-                      <div 
+                      <div
                         key={face.uuid}
-                        onClick={() => setFaceFilter([face.cluster_id])}
+                        onClick={() => applyFaceFilter([face.cluster_id])}
                         style={{
                           textAlign: 'center',
                           cursor: 'pointer',
