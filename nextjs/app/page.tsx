@@ -46,114 +46,150 @@ export default function HomePage() {
           Transform your event into a live, shared photo album where everyone can contribute and explore memories together.
         </p>
 
-        {/* Feature Cards */}
+        {/* Feature Cards - 4 rows layout */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gridTemplateColumns: '1fr', 
           gap: '2rem',
           marginBottom: '3rem'
         }}>
+          {/* Row 1: Create Events */}
           <Link href='/events' style={{ textDecoration: 'none' }}>
             <div style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              background: '#fff',
               padding: '2rem',
               borderRadius: '12px',
               cursor: 'pointer',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              border: '2px solid #eee'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
               e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎭</div>
-              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.3rem' }}>Create Events</h3>
-              <p style={{ margin: 0, opacity: 0.9 }}>
-                Set up your event and generate QR codes for easy sharing
-              </p>
+              <img 
+                src="https://cdn.prod.website-files.com/673d196dcbdffd5878aa34c3/67450441a62191954ce549e9_4-creative-qr-code-ideas-to-enhance-your-wedding-experience-wf.webp"
+                alt="Generate and share your QR code"
+                style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '8px', marginRight: '2rem' }}
+              />
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.5rem', color: '#2c3e50' }}>Create Events</h3>
+                <p style={{ margin: 0, color: '#666', fontSize: '1.1rem' }}>
+                  Generate and share your QR code - Set up your event and generate QR codes for easy sharing
+                </p>
+              </div>
             </div>
           </Link>
 
+          {/* Row 2: Capture Moments */}
           <Link href='/camera' style={{ textDecoration: 'none' }}>
             <div style={{
-              background: 'linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%)',
-              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              background: '#fff',
               padding: '2rem',
               borderRadius: '12px',
               cursor: 'pointer',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              border: '2px solid #eee'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
               e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📸</div>
-              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.3rem' }}>Capture Moments</h3>
-              <p style={{ margin: 0, opacity: 0.9 }}>
-                Take photos with your camera or upload existing ones with filters
-              </p>
+              <img 
+                src="https://images.airtasker.com/v7/https://airtasker-seo-assets-prod.s3.amazonaws.com/en_AU/1715328328533-event-photographers-hero.jpg"
+                alt="Capture moments live"
+                style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '8px', marginRight: '2rem' }}
+              />
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.5rem', color: '#2c3e50' }}>Capture Moments</h3>
+                <p style={{ margin: 0, color: '#666', fontSize: '1.1rem' }}>
+                  Capture moments live - Take photos with your camera or upload existing ones with filters
+                </p>
+              </div>
             </div>
           </Link>
 
+          {/* Row 3: Explore Gallery */}
           <Link href='/gallery' style={{ textDecoration: 'none' }}>
             <div style={{
-              background: 'linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)',
-              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              background: '#fff',
               padding: '2rem',
               borderRadius: '12px',
               cursor: 'pointer',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              border: '2px solid #eee'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
               e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🖼️</div>
-              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.3rem' }}>Explore Gallery</h3>
-              <p style={{ margin: 0, opacity: 0.9 }}>
-                Browse all event photos in a beautiful grid or list view
-              </p>
+              <img 
+                src="https://photos.smugmug.com/BLOG/Blog-images/i-4DzMFWZ/0/NCg78ZfVGwLThZt3BVVJkBNq7VgL2LmzdVTHmXfnd/XL/%40RobHammPhoto%20%236%28c%292017RobertHamm-XL.jpg"
+                alt="All your photos in one album"
+                style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '8px', marginRight: '2rem' }}
+              />
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.5rem', color: '#2c3e50' }}>Explore Gallery</h3>
+                <p style={{ margin: 0, color: '#666', fontSize: '1.1rem' }}>
+                  All your photos in one album - Browse all event photos in a beautiful gallery
+                </p>
+              </div>
             </div>
           </Link>
 
+          {/* Row 4: Find People */}
           <Link href='/people' style={{ textDecoration: 'none' }}>
             <div style={{
-              background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-              color: '#333',
+              display: 'flex',
+              alignItems: 'center',
+              background: '#fff',
               padding: '2rem',
               borderRadius: '12px',
               cursor: 'pointer',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              border: '2px solid #eee'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
               e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👥</div>
-              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.3rem' }}>Find People</h3>
-              <p style={{ margin: 0, opacity: 0.8 }}>
-                AI-powered face recognition to group photos by people
-              </p>
+              <img 
+                src="https://production-rhino-website-crm.s3.ap-southeast-1.amazonaws.com/Face_Recognition_17a30dc38b.png"
+                alt="Smart face grouping"
+                style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '8px', marginRight: '2rem' }}
+              />
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.5rem', color: '#2c3e50' }}>Find People</h3>
+                <p style={{ margin: 0, color: '#666', fontSize: '1.1rem' }}>
+                  Smart face grouping - AI-powered face recognition to group photos by people
+                </p>
+              </div>
             </div>
           </Link>
         </div>
@@ -279,7 +315,7 @@ export default function HomePage() {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
             }}>
-              🚀 Get Started - Create Your First Event
+              Get Started - Create Your First Event
             </button>
           </Link>
         </div>

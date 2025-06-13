@@ -22,11 +22,9 @@ export default function CameraPage() {
   // Device upload states
   const [deviceFiles, setDeviceFiles] = useState<File[]>([]);
   const [deviceUploading, setDeviceUploading] = useState(false);
-  const [devicePreviews, setDevicePreviews] = useState<string[]>([]);
   
   // Camera states
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-  const [cameraError, setCameraError] = useState<string>('');
   const [filter, setFilter] = useState('Normal');
   
   // Film strip states
@@ -52,7 +50,6 @@ export default function CameraPage() {
 
   const startCamera = useCallback(async () => {
     try {
-      setCameraError('');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
           width: { ideal: 1280 },
@@ -63,26 +60,10 @@ export default function CameraPage() {
       setCameraStream(stream);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        // Set video properties for better display
-        videoRef.current.muted = true;
-        videoRef.current.playsInline = true;
-        // Ensure video plays
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.error('Error playing video:', e);
-          });
-        }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error accessing camera:', error);
-      const errorMessage = error.name === 'NotAllowedError' 
-        ? 'Camera access denied. Please allow camera permissions and try again.'
-        : error.name === 'NotFoundError'
-        ? 'No camera found on this device.'
-        : 'Could not access camera. Please check permissions and try again.';
-      setCameraError(errorMessage);
-      alert(errorMessage);
+      alert('Could not access camera. Please check permissions.');
     }
   }, []);
 
@@ -90,11 +71,7 @@ export default function CameraPage() {
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
       setCameraStream(null);
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
     }
-    setCameraError('');
   }, [cameraStream]);
 
   const capturePhoto = useCallback(() => {
@@ -134,12 +111,6 @@ export default function CameraPage() {
   const handleDeviceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setDeviceFiles(files);
-    
-    // Create preview URLs
-    const previews = files.map(file => URL.createObjectURL(file));
-    // Clean up old previews
-    devicePreviews.forEach(url => URL.revokeObjectURL(url));
-    setDevicePreviews(previews);
   };
 
   const uploadDeviceFiles = async () => {
@@ -168,9 +139,6 @@ export default function CameraPage() {
       }
       
       setDeviceFiles([]);
-      // Clean up old previews
-      devicePreviews.forEach(url => URL.revokeObjectURL(url));
-      setDevicePreviews([]);
       // Reset file input
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
@@ -335,37 +303,35 @@ export default function CameraPage() {
                 </p>
                 <div style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-                  gap: '1rem',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', 
+                  gap: '0.5rem',
                   marginBottom: '1rem' 
                 }}>
-                  {devicePreviews.map((preview, idx) => (
+                  {deviceFiles.slice(0, 8).map((file, idx) => (
                     <div key={idx} style={{ 
                       background: '#fff', 
                       padding: '0.5rem', 
-                      borderRadius: '8px',
+                      borderRadius: '4px',
                       border: '1px solid #ddd',
+                      fontSize: '0.8rem',
                       textAlign: 'center'
                     }}>
-                      <img 
-                        src={preview}
-                        alt={`Preview ${idx + 1}`}
-                        style={{
-                          width: '100%',
-                          height: '100px',
-                          objectFit: 'cover',
-                          borderRadius: '4px',
-                          marginBottom: '0.5rem'
-                        }}
-                      />
-                      <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                        {deviceFiles[idx].name.length > 20 ? 
-                          deviceFiles[idx].name.substring(0, 17) + '...' : 
-                          deviceFiles[idx].name
-                        }
-                      </div>
+                      📷 {file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name}
                     </div>
                   ))}
+                  {deviceFiles.length > 8 && (
+                    <div style={{ 
+                      background: '#f0f0f0', 
+                      padding: '0.5rem', 
+                      borderRadius: '4px',
+                      border: '1px solid #ddd',
+                      fontSize: '0.8rem',
+                      textAlign: 'center',
+                      color: '#666'
+                    }}>
+                      +{deviceFiles.length - 8} more
+                    </div>
+                  )}
                 </div>
               </div>
             )}

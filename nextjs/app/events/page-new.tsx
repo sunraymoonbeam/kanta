@@ -245,86 +245,14 @@ function EventsPage() {
       }}>
         <h1 style={{ 
           textAlign: 'center', 
-          marginBottom: '2rem',
+          marginBottom: '1rem',
           color: '#2c3e50',
           fontSize: '2.5rem'
         }}>Events Manager</h1>
         
-        {/* Feature Grid */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '2rem', 
-          marginBottom: '3rem' 
-        }}>
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <img 
-              src="https://cdn.prod.website-files.com/673d196dcbdffd5878aa34c3/67450441a62191954ce549e9_4-creative-qr-code-ideas-to-enhance-your-wedding-experience-wf.webp"
-              alt="Create Events"
-              style={{ 
-                width: '200px', 
-                height: '150px', 
-                objectFit: 'cover', 
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            />
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Create</h3>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Generate and share your QR code</p>
-          </div>
-          
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <img 
-              src="https://images.airtasker.com/v7/https://airtasker-seo-assets-prod.s3.amazonaws.com/en_AU/1715328328533-event-photographers-hero.jpg"
-              alt="Capture Events"
-              style={{ 
-                width: '200px', 
-                height: '150px', 
-                objectFit: 'cover', 
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            />
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Capture</h3>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Capture moments live</p>
-          </div>
-          
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <img 
-              src="https://photos.smugmug.com/BLOG/Blog-images/i-4DzMFWZ/0/NCg78ZfVGwLThZt3BVVJkBNq7VgL2LmzdVTHmXfnd/XL/%40RobHammPhoto%20%236%28c%292017RobertHamm-XL.jpg"
-              alt="Explore Gallery"
-              style={{ 
-                width: '200px', 
-                height: '150px', 
-                objectFit: 'cover', 
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            />
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Explore</h3>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>All your photos in one album</p>
-          </div>
-          
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <img 
-              src="https://production-rhino-website-crm.s3.ap-southeast-1.amazonaws.com/Face_Recognition_17a30dc38b.png"
-              alt="Find People"
-              style={{ 
-                width: '200px', 
-                height: '150px', 
-                objectFit: 'cover', 
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            />
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Find People</h3>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Smart face grouping</p>
-          </div>
-        </div>
+        <p style={{ textAlign: 'center', marginBottom: '2rem', color: '#666' }}>
+          Manage your events and maintain a collaborative photo album.
+        </p>
 
         {error && (
           <div style={{ 
@@ -393,32 +321,28 @@ function EventsPage() {
                       marginBottom: '0.5rem' 
                     }}>
                       <span style={{ 
-                        fontSize: '1.5rem',
+                        fontSize: '1.2rem',
                         fontWeight: 'bold',
                         fontFamily: 'monospace',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: '#fff',
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '8px',
-                        letterSpacing: '1px',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                        background: '#f8f9fa',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '6px',
+                        border: '1px solid #ddd'
                       }}>
                         {event.code}
                       </span>
                       <button
                         onClick={() => copyToClipboard(event.code)}
                         style={{
-                          background: '#28a745',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '6px',
+                          background: 'none',
+                          border: '1px solid #ddd',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          fontSize: '0.9rem',
-                          fontWeight: 'bold'
+                          fontSize: '0.8rem'
                         }}
                       >
-                        Copy Code
+                        Copy
                       </button>
                     </div>
                     {event.description && (
@@ -432,6 +356,21 @@ function EventsPage() {
                     </div>
                     
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => setSelected(event.code)}
+                        style={{
+                          background: event.code === selected ? '#28a745' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {event.code === selected ? 'Selected' : 'Select'}
+                      </button>
+                      
                       <button
                         onClick={() => openModal('details', event)}
                         style={{
@@ -475,21 +414,6 @@ function EventsPage() {
                         }}
                       >
                         Delete
-                      </button>
-                      
-                      <button
-                        onClick={() => setSelected(event.code)}
-                        style={{
-                          background: event.code === selected ? '#28a745' : '#6c757d',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {event.code === selected ? 'Selected' : 'Select'}
                       </button>
                     </div>
                   </div>
@@ -642,41 +566,29 @@ function EventsPage() {
               
               <div style={{ marginBottom: '1rem' }}>
                 <strong>Event Code:</strong> 
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '1rem', 
-                  marginTop: '0.5rem' 
+                <span style={{ 
+                  background: '#f8f9fa', 
+                  padding: '0.25rem 0.5rem', 
+                  borderRadius: '4px', 
+                  marginLeft: '0.5rem',
+                  fontFamily: 'monospace'
                 }}>
-                  <span style={{ 
-                    fontSize: '1.4rem',
-                    fontWeight: 'bold',
-                    fontFamily: 'monospace',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: '#fff',
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '8px',
-                    letterSpacing: '1px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-                  }}>
-                    {selectedEvent.code}
-                  </span>
-                  <button
-                    onClick={() => copyToClipboard(selectedEvent.code)}
-                    style={{
-                      background: '#28a745',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    Copy Code
-                  </button>
-                </div>
+                  {selectedEvent.code}
+                </span>
+                <button
+                  onClick={() => copyToClipboard(selectedEvent.code)}
+                  style={{
+                    background: 'none',
+                    border: '1px solid #ddd',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    marginLeft: '0.5rem'
+                  }}
+                >
+                  Copy
+                </button>
               </div>
 
               {selectedEvent.description && (
