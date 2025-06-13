@@ -1,0 +1,356 @@
+/* Kanta Design System - Inspired by Magic Portfolio */
+/* This file provides the core design tokens and CSS variables */
+
+:root {
+  /* Typography Scale */
+  --font-heading: var(--font-playfair-display);
+  --font-body: var(--font-inter);
+  --font-label: var(--font-inter);
+  --font-code: var(--font-geist-mono);
+
+  /* Font Sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* Z-Index Scale */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+  --transition-bounce: 300ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Light Theme Colors */
+[data-theme="light"] {
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(15, 23, 42, 0.8);
+
+  /* Surface Colors */
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-tertiary: #f1f5f9;
+  --surface-border: #e2e8f0;
+  --surface-border-subtle: #f1f5f9;
+
+  /* Text Colors */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+  --text-quaternary: #94a3b8;
+  --text-inverse: #ffffff;
+
+  /* Brand Colors */
+  --brand-50: #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-200: #ddd6fe;
+  --brand-300: #c4b5fd;
+  --brand-400: #a78bfa;
+  --brand-500: #8b5cf6;
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9;
+  --brand-800: #5b21b6;
+  --brand-900: #4c1d95;
+
+  /* Accent Colors */
+  --accent-50: #ecfeff;
+  --accent-100: #cffafe;
+  --accent-200: #a5f3fc;
+  --accent-300: #67e8f9;
+  --accent-400: #22d3ee;
+  --accent-500: #06b6d4;
+  --accent-600: #0891b2;
+  --accent-700: #0e7490;
+  --accent-800: #155e75;
+  --accent-900: #164e63;
+
+  /* Semantic Colors */
+  --success-50: #ecfdf5;
+  --success-500: #10b981;
+  --success-600: #059669;
+  --success-700: #047857;
+
+  --warning-50: #fffbeb;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+
+  --error-50: #fef2f2;
+  --error-500: #ef4444;
+  --error-600: #dc2626;
+  --error-700: #b91c1c;
+
+  /* Interactive States */
+  --interactive-hover: rgba(139, 92, 246, 0.08);
+  --interactive-active: rgba(139, 92, 246, 0.12);
+  --interactive-focus: rgba(139, 92, 246, 0.12);
+}
+
+/* Dark Theme Colors */
+[data-theme="dark"] {
+  /* Background Colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-elevated: #1e293b;
+  --bg-overlay: rgba(0, 0, 0, 0.8);
+
+  /* Surface Colors */
+  --surface-primary: #1e293b;
+  --surface-secondary: #334155;
+  --surface-tertiary: #475569;
+  --surface-border: #475569;
+  --surface-border-subtle: #334155;
+
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e1;
+  --text-quaternary: #94a3b8;
+  --text-inverse: #0f172a;
+
+  /* Brand Colors - Adjusted for dark theme */
+  --brand-50: #4c1d95;
+  --brand-100: #5b21b6;
+  --brand-200: #6d28d9;
+  --brand-300: #7c3aed;
+  --brand-400: #8b5cf6;
+  --brand-500: #a78bfa;
+  --brand-600: #c4b5fd;
+  --brand-700: #ddd6fe;
+  --brand-800: #ede9fe;
+  --brand-900: #f5f3ff;
+
+  /* Accent Colors - Adjusted for dark theme */
+  --accent-50: #164e63;
+  --accent-100: #155e75;
+  --accent-200: #0e7490;
+  --accent-300: #0891b2;
+  --accent-400: #06b6d4;
+  --accent-500: #22d3ee;
+  --accent-600: #67e8f9;
+  --accent-700: #a5f3fc;
+  --accent-800: #cffafe;
+  --accent-900: #ecfeff;
+
+  /* Semantic Colors - Adjusted for dark theme */
+  --success-50: #047857;
+  --success-500: #10b981;
+  --success-600: #34d399;
+  --success-700: #6ee7b7;
+
+  --warning-50: #b45309;
+  --warning-500: #f59e0b;
+  --warning-600: #fbbf24;
+  --warning-700: #fcd34d;
+
+  --error-50: #b91c1c;
+  --error-500: #ef4444;
+  --error-600: #f87171;
+  --error-700: #fca5a5;
+
+  /* Interactive States */
+  --interactive-hover: rgba(167, 139, 250, 0.08);
+  --interactive-active: rgba(167, 139, 250, 0.12);
+  --interactive-focus: rgba(167, 139, 250, 0.12);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+h1 { font-size: var(--text-5xl); }
+h2 { font-size: var(--text-4xl); }
+h3 { font-size: var(--text-3xl); }
+h4 { font-size: var(--text-2xl); }
+h5 { font-size: var(--text-xl); }
+h6 { font-size: var(--text-lg); }
+
+p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+/* Utility Classes */
+.gradient-bg {
+  background: linear-gradient(135deg, var(--brand-500) 0%, var(--accent-500) 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand-600) 0%, var(--accent-600) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .glass-effect {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fadeIn var(--transition-normal) ease forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp var(--transition-normal) ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-normal) ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Focus States */
+.focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+/* Interactive Elements */
+.interactive {
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.interactive:hover {
+  transform: translateY(-1px);
+}
+
+.interactive:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  :root {
+    --text-5xl: 2.5rem;
+    --text-4xl: 2rem;
+    --text-3xl: 1.75rem;
+  }
+}

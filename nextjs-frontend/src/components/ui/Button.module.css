@@ -1,0 +1,156 @@
+/* Button Component Styles */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-label);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  outline: none;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Variants */
+.primary {
+  background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-700) 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+}
+
+.primary:hover:not(:disabled) {
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+}
+
+.secondary {
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--surface-border);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--surface-secondary);
+  border-color: var(--brand-300);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--interactive-hover);
+  color: var(--text-primary);
+}
+
+.danger {
+  background: linear-gradient(135deg, var(--error-500) 0%, var(--error-600) 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+
+.danger:hover:not(:disabled) {
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.4);
+}
+
+.success {
+  background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+}
+
+.success:hover:not(:disabled) {
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+}
+
+.warning {
+  background: linear-gradient(135deg, var(--warning-500) 0%, var(--warning-600) 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+}
+
+.warning:hover:not(:disabled) {
+  box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
+}
+
+/* Sizes */
+.sm {
+  padding: 0.5rem 1rem;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-md);
+}
+
+.md {
+  padding: 0.75rem 1.5rem;
+  font-size: var(--text-base);
+}
+
+.lg {
+  padding: 1rem 2rem;
+  font-size: var(--text-lg);
+  border-radius: var(--radius-xl);
+}
+
+/* Icon */
+.icon {
+  display: flex;
+  align-items: center;
+  font-size: 1.125em;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Shine effect for primary buttons */
+.primary::before,
+.danger::before,
+.success::before,
+.warning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.primary:hover:not(:disabled)::before,
+.danger:hover:not(:disabled)::before,
+.success:hover:not(:disabled)::before,
+.warning:hover:not(:disabled)::before {
+  left: 100%;
+}

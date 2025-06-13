@@ -1,0 +1,88 @@
+/* Card Component Styles */
+.card {
+  background: var(--surface-primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--surface-border-subtle);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Variants */
+.default {
+  background: var(--surface-primary);
+}
+
+.elevated {
+  background: var(--surface-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.outlined {
+  background: var(--surface-primary);
+  border: 1px solid var(--surface-border);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .glass {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Padding */
+.padding-none {
+  padding: 0;
+}
+
+.padding-sm {
+  padding: 1rem;
+}
+
+.padding-md {
+  padding: 1.5rem;
+}
+
+.padding-lg {
+  padding: 2rem;
+}
+
+/* Interactive */
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:hover {
+  box-shadow: var(--shadow-xl);
+  border-color: var(--surface-border);
+}
+
+.interactive:hover.elevated {
+  box-shadow: var(--shadow-2xl);
+}
+
+/* Hover overlay effect */
+.interactive::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--brand-50) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  pointer-events: none;
+}
+
+[data-theme="dark"] .interactive::before {
+  background: linear-gradient(135deg, var(--brand-900) 0%, transparent 100%);
+}
+
+.interactive:hover::before {
+  opacity: 1;
+}

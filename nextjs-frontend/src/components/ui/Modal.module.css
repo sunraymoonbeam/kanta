@@ -1,0 +1,120 @@
+/* Modal Component Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  position: relative;
+  background: var(--surface-primary);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--surface-border);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Modal Sizes */
+.sm {
+  width: 100%;
+  max-width: 400px;
+}
+
+.md {
+  width: 100%;
+  max-width: 600px;
+}
+
+.lg {
+  width: 100%;
+  max-width: 800px;
+}
+
+.xl {
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--surface-border-subtle);
+  background: var(--surface-secondary);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.closeButton {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Content */
+.content {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modalOverlay {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .modal {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 95vh;
+  }
+
+  .header {
+    padding: 1rem 1.5rem;
+  }
+
+  .content {
+    padding: 1.5rem;
+  }
+
+  .sm,
+  .md,
+  .lg,
+  .xl {
+    max-width: 100%;
+  }
+}

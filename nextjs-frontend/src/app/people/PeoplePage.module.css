@@ -1,0 +1,205 @@
+.container {
+  min-height: 100vh;
+  padding: var(--spacing-lg);
+  background: var(--color-background);
+}
+
+.header {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.headerContent {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+}
+
+.titleSection {
+  flex: 1;
+}
+
+.title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+  font-family: var(--font-family-heading);
+}
+
+.subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.emptyState h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-family: var(--font-family-heading);
+}
+
+.emptyState p {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.clusterCard {
+  position: relative;
+  padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: all var(--transition-duration-normal) var(--transition-easing);
+  border: 2px solid transparent;
+}
+
+.clusterCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.clusterCard.selected {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-500-rgb), 0.1);
+}
+
+.faceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.faceContainer {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  background: var(--color-neutral-100);
+}
+
+.faceImage {
+  object-fit: cover;
+  transition: transform var(--transition-duration-normal) var(--transition-easing);
+}
+
+.clusterCard:hover .faceImage {
+  transform: scale(1.1);
+}
+
+.clusterInfo {
+  text-align: center;
+}
+
+.clusterTitle {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+  font-family: var(--font-family-heading);
+}
+
+.faceCount {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.selectedIndicator {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 32px;
+  height: 32px;
+  background: var(--color-primary-500);
+  color: white;
+  border-radius: var(--border-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--shadow-md);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-md);
+  }
+  
+  .headerContent {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+  
+  .actions {
+    justify-content: flex-start;
+  }
+  
+  .title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+  }
+  
+  .clusterCard {
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .faceContainer {
+  background: var(--color-neutral-800);
+}
+
+[data-theme="dark"] .clusterCard.selected {
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-400-rgb), 0.1);
+}
+
+[data-theme="dark"] .selectedIndicator {
+  background: var(--color-primary-400);
+}

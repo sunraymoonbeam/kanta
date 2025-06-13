@@ -7,9 +7,13 @@
     "start": "next start"
   },
   "dependencies": {
+    "@next/font": "^14.2.15",
     "@types/sharp": "^0.31.1",
     "axios": "1.6.8",
+    "classnames": "^2.5.1",
+    "clsx": "^2.1.1",
     "debug": "^4.4.1",
+    "framer-motion": "^12.18.1",
     "jszip": "^3.10.1",
     "next": "13.5.11",
     "react": "18.2.0",

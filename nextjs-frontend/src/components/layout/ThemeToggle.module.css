@@ -1,0 +1,54 @@
+/* Theme Toggle Styles */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-secondary);
+  border: 1px solid var(--surface-border-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  outline: none;
+}
+
+.toggle:hover {
+  background: var(--interactive-hover);
+  color: var(--text-primary);
+  border-color: var(--surface-border);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.label {
+  font-family: var(--font-label);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .label {
+    display: none;
+  }
+  
+  .toggle {
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+}

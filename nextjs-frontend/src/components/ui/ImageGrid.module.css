@@ -1,0 +1,119 @@
+.grid {
+  display: grid;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) 0;
+}
+
+.imageContainer {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-duration-normal) var(--transition-easing);
+  border: 2px solid transparent;
+}
+
+.imageContainer:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.imageContainer.selected {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-500-rgb), 0.2);
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image {
+  object-fit: cover;
+  transition: all var(--transition-duration-normal) var(--transition-easing);
+}
+
+.faceCount {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: var(--border-radius-full);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  backdrop-filter: blur(8px);
+}
+
+.selectedOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--color-primary-500-rgb), 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+.checkIcon {
+  background: var(--color-primary-500);
+  color: white;
+  border-radius: var(--border-radius-full);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl) 0;
+  text-align: center;
+}
+
+.emptyMessage {
+  font-size: var(--font-size-lg);
+  color: var(--color-neutral-600);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid {
+    gap: var(--spacing-sm);
+  }
+  
+  .faceCount {
+    font-size: var(--font-size-2xs);
+    padding: 2px var(--spacing-xs);
+  }
+  
+  .checkIcon {
+    width: 24px;
+    height: 24px;
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .emptyMessage {
+  color: var(--color-neutral-400);
+}
+
+[data-theme="dark"] .faceCount {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .imageContainer.selected {
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-400-rgb), 0.3);
+}

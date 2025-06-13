@@ -18,6 +18,17 @@
     "jsx": "preserve",
     "incremental": true,
     "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/features/*": ["./src/components/features/*"],
+      "@/ui/*": ["./src/components/ui/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/app/*": ["./src/app/*"]
+    },
     "plugins": [
       {
         "name": "next"
