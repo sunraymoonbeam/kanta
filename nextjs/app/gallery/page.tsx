@@ -96,11 +96,11 @@ function GalleryPage() {
         offset: filters.offset,
       };
       
-      if (filters.startDate) params.start_date = filters.startDate;
-      if (filters.endDate) params.end_date = filters.endDate;
+      if (filters.startDate) params.date_from = filters.startDate;
+      if (filters.endDate) params.date_to = filters.endDate;
       if (filters.minFaces) params.min_faces = parseInt(filters.minFaces);
       if (filters.maxFaces) params.max_faces = parseInt(filters.maxFaces);
-      if (faceFilter !== null) params.face_uuid = faceFilter.toString();
+      if (faceFilter !== null) params.cluster_list_id = [faceFilter];
       
       const response = await getImages(params);
       setImages(response.images);
