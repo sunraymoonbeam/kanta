@@ -13,8 +13,9 @@ export default function PeoplePage() {
 
   const loadClusters = async () => {
     if (!eventCode) return;
-    const data = await getClusters(eventCode, sampleSize);
-    setClusters(data);
+    const data: any = await getClusters(eventCode, sampleSize);
+    const list = Array.isArray(data) ? data : data?.clusters || [];
+    setClusters(list);
   };
 
   const runSearch = async () => {
@@ -47,13 +48,22 @@ export default function PeoplePage() {
             onChange={(e) => setSampleSize(parseInt(e.target.value))}
           />
           <button onClick={loadClusters}>Load</button>
-          <ul>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
             {clusters.map((c) => (
-              <li key={c.cluster_id}>
-                Person {c.cluster_id} ({c.face_count} photos)
-              </li>
+              <div key={c.cluster_id} style={{ textAlign: 'center' }}>
+                {c.samples?.[0]?.sample_blob_url && (
+                  <img
+                    src={c.samples[0].sample_blob_url}
+                    width={80}
+                    height={80}
+                    style={{ borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                )}
+                <div>Person {c.cluster_id}</div>
+                <small>({c.face_count} photos)</small>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
@@ -61,11 +71,17 @@ export default function PeoplePage() {
         <div>
           <input type='file' onChange={(e) => setQueryFile(e.target.files?.[0])} />
           <button onClick={runSearch} disabled={!queryFile}>Search</button>
-          <ul>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1rem' }}>
             {results.map((r, idx) => (
-              <li key={idx}>Person {r.cluster_id} dist {r.distance}</li>
+              <div key={idx} style={{ textAlign: 'center' }}>
+                {r.azure_blob_url && (
+                  <img src={r.azure_blob_url} width={100} height={100} style={{ borderRadius: '8px', objectFit: 'cover' }} />
+                )}
+                <div>Person {r.cluster_id}</div>
+                <small>distance {r.distance.toFixed(2)}</small>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </section>

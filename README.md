@@ -19,5 +19,7 @@ participants to take photos and share them.
    ```
 3. Open `http://localhost:8501` for the Streamlit frontend or
    `http://localhost:3000` for the Next.js frontend.
+   The Next.js service uses environment variables `NEXT_PUBLIC_BACKEND_URL` and
+   `NEXT_PUBLIC_ADMIN_PASSWORD` from `.env`.
 
 Both frontends talk to the same FastAPI backend at `http://localhost:8000/api/v1`.

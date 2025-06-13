@@ -9,6 +9,8 @@ import {
 } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 
+const ADMIN_PW = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password123';
+
 interface EventInfo {
   code: string;
   name?: string;
@@ -36,6 +38,8 @@ export default function EventsPage() {
     end: '',
   });
   const [imgFile, setImgFile] = useState<File>();
+  const [deletePwd, setDeletePwd] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState('');
 
   useEffect(() => {
     refresh();
@@ -71,9 +75,15 @@ export default function EventsPage() {
 
   const handleDelete = async () => {
     if (!selected) return;
+    if (deletePwd !== ADMIN_PW || deleteConfirm.trim() !== selected) {
+      alert('Incorrect password or event code');
+      return;
+    }
     await deleteEvent(selected);
     await refresh();
     setSelected('');
+    setDeletePwd('');
+    setDeleteConfirm('');
   };
 
   const handleUpdate = async () => {
@@ -229,9 +239,22 @@ export default function EventsPage() {
               </option>
             ))}
           </select>{' '}
-          <button onClick={handleDelete} disabled={!selected}>
-            Delete
-          </button>
+          <div style={{ marginTop: '0.5rem' }}>
+            <input
+              type="password"
+              placeholder="Administrator Password"
+              value={deletePwd}
+              onChange={(e) => setDeletePwd(e.target.value)}
+            />
+            <input
+              placeholder="Type event code to confirm"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+            />
+            <button onClick={handleDelete} disabled={!selected}>
+              Delete
+            </button>
+          </div>
         </div>
       )}
     </section>

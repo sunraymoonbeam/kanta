@@ -29,8 +29,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await getEvents();
       setEvents(data);
-      if (!selected && data.length) {
-        setSelected(data[0].code);
+      if (!selected || !data.find((e) => e.code === selected)) {
+        setSelected(data.length ? data[0].code : '');
       }
     } catch (e) {
       console.error('Failed to load events', e);

@@ -6,7 +6,9 @@ This directory contains a lightweight Next.js UI that mirrors the original Strea
 
 1. `cd nextjs`
 2. Run `npm install`
-3. Create `.env.local` and set `NEXT_PUBLIC_BACKEND_URL` to the FastAPI backend URL (default `http://localhost:8000/api/v1`).
+3. Create `.env.local` and set:
+   - `NEXT_PUBLIC_BACKEND_URL` pointing to the FastAPI backend (default `http://localhost:8000/api/v1`)
+   - `NEXT_PUBLIC_ADMIN_PASSWORD` matching the backend admin password
 4. `npm run dev` for development
 5. For production build run `npm run build` followed by `npm start`
 

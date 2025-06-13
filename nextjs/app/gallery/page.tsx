@@ -12,6 +12,7 @@ export default function GalleryPage() {
   const [limit, setLimit] = useState(20);
   const [page, setPage] = useState(1);
   const [images, setImages] = useState<any[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const load = async () => {
     if (!eventCode) return;
@@ -43,10 +44,27 @@ export default function GalleryPage() {
         <input className='small-input' type='number' value={limit} onChange={e=>setLimit(parseInt(e.target.value))} />
         <input className='small-input' type='number' value={page} onChange={e=>setPage(parseInt(e.target.value))} />
         <button onClick={load}>Load</button>
+        {selectedIds.length > 0 && (
+          <span style={{ marginLeft: '1rem' }}>{selectedIds.length} selected</span>
+        )}
       </div>
       <div className='gallery-grid'>
         {images.map(img => (
-          <img key={img.uuid} src={img.azure_blob_url} />
+          <div key={img.uuid} style={{ position: 'relative' }}>
+            <img src={img.azure_blob_url} />
+            <input
+              type='checkbox'
+              style={{ position: 'absolute', top: 4, left: 4 }}
+              checked={selectedIds.includes(img.uuid)}
+              onChange={(e) => {
+                setSelectedIds((prev) =>
+                  e.target.checked
+                    ? [...prev, img.uuid]
+                    : prev.filter((id) => id !== img.uuid)
+                );
+              }}
+            />
+          </div>
         ))}
       </div>
     </section>
