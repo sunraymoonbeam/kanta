@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import JSZip from 'jszip';
+import NextImage from 'next/image';
 import { getImages, getImageDetail, deleteImage } from '../../lib/api';
 import { useEvents } from '../../hooks/useEvents';
 import { Image, ImageDetail, ImagesParams } from '../../types/images';
@@ -271,6 +272,37 @@ export default function GalleryPage() {
         <p className="text-center text-gray-600 text-lg">
           Browse photos from <strong>{selected}</strong>
         </p>
+        
+        {/* Person Filter Indicator */}
+        {faceFilter && faceFilter.length > 0 && (
+          <div className="mt-6 flex justify-center">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl px-6 py-4 shadow-lg">
+              <div className="flex items-center justify-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-blue-900 font-semibold">
+                    Viewing photos of: 
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Person {faceFilter.join(', Person ')}
+                  </span>
+                  <button
+                    onClick={() => {
+                      applyFaceFilter(null);
+                      setCurrentPage(1);
+                    }}
+                    className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                  >
+                    <span>×</span>
+                    Clear Filter
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>      {/* Filters */}
       <Card className="mb-8" padding="lg">
         <h3 className="mb-4 text-gray-700 text-lg font-semibold">Filters</h3>
@@ -395,7 +427,7 @@ export default function GalleryPage() {
       <Card>
         {images.length === 0 && !loading ? (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">📸</div>
+            <div className="text-6xl mb-4 text-gray-400">📷</div>
             <h3 className="text-gray-500 text-xl mb-4">No photos found</h3>
             <p className="text-gray-400">
               {faceFilter ? 'No photos found with the selected face filter.' : 'Upload some photos to get started!'}
@@ -457,10 +489,13 @@ export default function GalleryPage() {
           <div className="grid gap-8">
             {/* Main Image */}
             <div className="text-center">
-              <img
+              <NextImage
                 src={imageDetail.image.azure_blob_url}
-                alt="Selected"
+                alt="Selected photo"
+                width={800}
+                height={600}
                 className="max-w-full max-h-[60vh] object-contain rounded-xl shadow-lg mx-auto"
+                priority
               />
             </div>
 
@@ -491,9 +526,11 @@ export default function GalleryPage() {
                     <div key={face.face_id} className="text-center">
                       <div className="w-24 h-24 mx-auto mb-2 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
                         {croppedFaces[face.face_id.toString()] ? (
-                          <img
+                          <NextImage
                             src={croppedFaces[face.face_id.toString()]}
                             alt={`Face ${face.face_id}`}
+                            width={96}
+                            height={96}
                             className="w-full h-full object-cover"
                           />
                         ) : (

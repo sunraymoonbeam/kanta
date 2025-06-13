@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import NextImage from 'next/image';
 import { getClusters } from '../../lib/api';
 import { useEvents } from '../../hooks/useEvents';
 import { Cluster, CyclingFaceState, CacheEntry } from '../../types/people';
@@ -248,7 +249,7 @@ export default function PeoplePage() {
       {clusters.length === 0 ? (
         <Card padding="lg" className="text-center">
           <div className="py-12">
-            <div className="text-6xl mb-4">🤖</div>
+            <div className="text-6xl mb-4 text-gray-400">👤</div>
             <h2 className="text-gray-500 text-xl mb-4">No People Detected Yet</h2>
             <p className="text-gray-400 mb-8 text-lg">
               Upload some photos with people to see AI face recognition in action
@@ -325,9 +326,11 @@ export default function PeoplePage() {
                     {/* Face Display */}
                     <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
                       {croppedFace ? (
-                        <img
+                        <NextImage
                           src={croppedFace}
                           alt={`Person ${cluster.cluster_id}`}
+                          width={128}
+                          height={128}
                           className="w-full h-full object-cover"
                         />
                       ) : (
