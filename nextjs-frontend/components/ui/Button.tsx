@@ -22,24 +22,25 @@ const buttonStyles = {
   },
   variants: {
     primary: {
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: '#0095f6',
       color: '#fff',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+      boxShadow: '0 2px 8px rgba(0,149,246,0.3)',
     },
     secondary: {
-      background: '#6c757d',
-      color: '#fff',
+      background: '#ffffff',
+      color: '#262626',
+      border: '1px solid #dbdbdb',
     },
     danger: {
-      background: '#e74c3c',
+      background: '#ed4956',
       color: '#fff',
     },
     success: {
-      background: '#27ae60',
+      background: '#00ba7c',
       color: '#fff',
     },
     warning: {
-      background: '#f39c12',
+      background: '#ff9500',
       color: '#fff',
     },
   },

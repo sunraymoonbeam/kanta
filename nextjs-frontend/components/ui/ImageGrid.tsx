@@ -17,7 +17,7 @@ export default function ImageGrid({
   selectedImages = new Set(),
   loading = false,
   emptyMessage = 'No images found.',
-  columns = 4,
+  columns = 5,
 }: ImageGridProps) {
   if (loading) {
     return (

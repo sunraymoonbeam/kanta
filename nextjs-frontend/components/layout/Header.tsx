@@ -6,59 +6,145 @@ export default function Header() {
   const { events, selected, setSelected, loading, error } = useEvents();
   
   return (
-    <header className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 shadow-lg">
-      <div className="flex items-center justify-between max-w-6xl mx-auto">
-        <div className="flex gap-8 items-center">
-          <Link href="/" className="text-white text-xl font-bold flex items-center gap-2 hover:text-indigo-200 transition-colors">
+    <header style={{ 
+      background: '#ffffff', 
+      padding: '1rem', 
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      borderBottom: '1px solid #dbdbdb',
+      position: 'sticky',
+      top: 0,
+      zIndex: 50
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        maxWidth: '1200px', 
+        margin: '0 auto'
+      }}>
+        <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+          <Link 
+            href="/" 
+            style={{ 
+              color: '#262626', 
+              fontSize: '1.5rem', 
+              fontWeight: 'bold', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              textDecoration: 'none',
+              letterSpacing: '-0.02em'
+            }}
+          >
             Kanta
           </Link>
           
-          <nav className="flex gap-4">
+          <nav style={{ display: 'flex', gap: '1rem' }}>
             <Link 
               href="/events" 
-              className="text-white px-4 py-2 rounded-md hover:bg-white hover:bg-opacity-10 transition-all duration-200"
+              style={{ 
+                color: '#262626', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Events
             </Link>
             <Link 
               href="/gallery/upload"
-              className="text-white px-4 py-2 rounded-md hover:bg-white hover:bg-opacity-10 transition-all duration-200"
+              style={{ 
+                color: '#262626', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Upload
             </Link>
             <Link 
               href="/gallery" 
-              className="text-white px-4 py-2 rounded-md hover:bg-white hover:bg-opacity-10 transition-all duration-200"
+              style={{ 
+                color: '#262626', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Gallery
             </Link>
             <Link 
               href="/people" 
-              className="text-white px-4 py-2 rounded-md hover:bg-white hover:bg-opacity-10 transition-all duration-200"
+              style={{ 
+                color: '#262626', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               People
             </Link>
           </nav>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {error && (
-            <span className="text-red-200 text-sm bg-white bg-opacity-10 px-3 py-1 rounded">
+            <span style={{ 
+              color: '#ed4956', 
+              fontSize: '0.875rem', 
+              background: '#fef2f2', 
+              padding: '0.5rem 0.75rem', 
+              borderRadius: '6px',
+              border: '1px solid #fecaca'
+            }}>
               {error}
             </span>
           )}
           
           {loading ? (
-            <span className="text-white text-sm">Loading events...</span>
+            <span style={{ color: '#8e8e8e', fontSize: '0.875rem' }}>Loading events...</span>
           ) : (
-            <div className="flex flex-col items-end">
-              <label className="text-white text-xs mb-1">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <label style={{ 
+                color: '#8e8e8e', 
+                fontSize: '0.75rem', 
+                marginBottom: '0.25rem'
+              }}>
                 Selected Event:
               </label>
               <select 
                 value={selected} 
                 onChange={(e) => setSelected(e.target.value)}
-                className="p-2 rounded-md border-none bg-white bg-opacity-95 min-w-48 text-sm font-medium focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                style={{ 
+                  padding: '0.5rem', 
+                  borderRadius: '6px', 
+                  border: '1px solid #dbdbdb', 
+                  background: '#ffffff',
+                  minWidth: '12rem',
+                  fontSize: '0.875rem', 
+                  fontWeight: '500',
+                  color: '#262626'
+                }}
               >
                 {events.length === 0 ? (
                   <option value="">No events available</option>

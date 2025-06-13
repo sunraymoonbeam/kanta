@@ -293,12 +293,11 @@ export default function GalleryPage() {
 
   if (!selected) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">📷</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Event Selected</h2>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">No Event Selected</h2>
           <p className="text-gray-600">
-            Please select an event to view photos.
+            Please select an event from the header dropdown to view photos.
           </p>
         </div>
       </div>
@@ -306,54 +305,52 @@ export default function GalleryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Instagram-style Header */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-3">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-semibold text-gray-900">Gallery</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Gallery</h1>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500">
+                {totalCount} photos
+              </span>
               {selected && (
-                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
                   {selected}
                 </span>
               )}
             </div>
-            
-            <div className="flex items-center gap-2">
-              {/* Filter Toggle */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-2 rounded-full transition-colors ${
-                  showFilters 
-                    ? 'bg-gray-900 text-white' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                </svg>
-              </button>
-              
-              {/* Upload Button */}
-              <button
-                onClick={() => window.location.href = '/gallery/upload'}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
-            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Collapsible Filter Bar */}
-          {showFilters && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Collapsible Filter Bar */}
+        <div className="bg-white border-b border-gray-100">
+          <div className="px-4 py-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <span className="text-sm font-medium text-gray-700">
+                Filters {Object.values(filters).some(v => v !== '' && v !== 0) || faceFilter ? '(Active)' : ''}
+              </span>
+              <svg
+                className={`w-5 h-5 text-gray-400 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {showFilters && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Date Range */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">From Date</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">From Date</label>
                   <input
                     type="date"
                     value={filters.startDate}
@@ -361,12 +358,12 @@ export default function GalleryPage() {
                       setFilters({ ...filters, startDate: e.target.value });
                       setCurrentPage(1);
                     }}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">To Date</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">To Date</label>
                   <input
                     type="date"
                     value={filters.endDate}
@@ -374,13 +371,13 @@ export default function GalleryPage() {
                       setFilters({ ...filters, endDate: e.target.value });
                       setCurrentPage(1);
                     }}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 {/* Face Count */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Min Faces</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">Min Faces</label>
                   <input
                     type="number"
                     min="0"
@@ -389,21 +386,21 @@ export default function GalleryPage() {
                       setFilters({ ...filters, minFaces: e.target.value });
                       setCurrentPage(1);
                     }}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Any"
                   />
                 </div>
 
                 {/* Items per page */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Per Page</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">Photos per page</label>
                   <select
                     value={itemsPerPage}
                     onChange={(e) => {
                       setItemsPerPage(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {itemsPerPageOptions.map(option => (
                       <option key={option} value={option}>{option}</option>
@@ -411,86 +408,40 @@ export default function GalleryPage() {
                   </select>
                 </div>
 
-                {/* Page Navigation */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Page</label>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage <= 1}
-                      className="p-1 text-xs border border-gray-300 rounded disabled:opacity-50 hover:bg-gray-100"
-                    >
-                      ←
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      max={Math.ceil(totalCount / itemsPerPage)}
-                      value={currentPage}
-                      onChange={(e) => {
-                        const page = Math.max(1, Math.min(Math.ceil(totalCount / itemsPerPage), Number(e.target.value)));
-                        setCurrentPage(page);
-                      }}
-                      className="w-12 px-1 py-1 text-xs text-center border border-gray-300 rounded focus:ring-1 focus:ring-gray-900"
-                    />
-                    <button
-                      onClick={() => setCurrentPage(Math.min(Math.ceil(totalCount / itemsPerPage), currentPage + 1))}
-                      disabled={currentPage >= Math.ceil(totalCount / itemsPerPage)}
-                      className="p-1 text-xs border border-gray-300 rounded disabled:opacity-50 hover:bg-gray-100"
-                    >
-                      →
-                    </button>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Stats</label>
-                  <div className="text-xs text-gray-500">
-                    {totalCount} photos
-                    <br />
-                    Page {currentPage} of {Math.ceil(totalCount / itemsPerPage)}
-                  </div>
+                {/* Clear filters */}
+                <div className="md:col-span-2 lg:col-span-4 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setFilters({
+                        startDate: '',
+                        endDate: '',
+                        minFaces: '',
+                        maxFaces: '',
+                        limit: 50,
+                        offset: 0
+                      });
+                      setFaceFilter(null);
+                      setCurrentPage(1);
+                    }}
+                    className="text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    Clear all filters
+                  </button>
                 </div>
               </div>
-
-              {/* Clear Filters */}
-              <div className="mt-3 flex justify-end">
-                <button
-                  onClick={() => {
-                    setFilters({
-                      startDate: '',
-                      endDate: '',
-                      minFaces: '',
-                      maxFaces: '',
-                      limit: 50,
-                      offset: 0
-                    });
-                    setFaceFilter(null);
-                    setCurrentPage(1);
-                  }}
-                  className="text-xs text-gray-600 hover:text-gray-900"
-                >
-                  Clear all filters
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {error && (
-        <div className="max-w-4xl mx-auto px-4 pt-4">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-800 text-sm">{error}</p>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Selection Action Bar */}
-      {(selectedImages.size > 0 || selectMode) && (
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-4 py-3">
+        {error && (
+          <div className="mx-4 mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-800 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Action Bar */}
+        {(selectedImages.size > 0 || selectMode) && (
+          <div className="bg-white border-b border-gray-200 px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600">
@@ -501,7 +452,7 @@ export default function GalleryPage() {
                     setSelectedImages(new Set());
                     setSelectMode(false);
                   }}
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-sm text-blue-600 hover:text-blue-700"
                 >
                   Clear selection
                 </button>
@@ -511,7 +462,7 @@ export default function GalleryPage() {
                 <button
                   onClick={downloadSelectedImages}
                   disabled={selectedImages.size === 0 || isDownloading}
-                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isDownloading ? 'Downloading...' : `Download (${selectedImages.size})`}
                 </button>
@@ -526,153 +477,158 @@ export default function GalleryPage() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Instagram-style Grid */}
-      <div className="max-w-4xl mx-auto">
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
-          </div>
-        ) : images.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📷</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No photos found</h3>
-            <p className="text-gray-500 mb-6">Upload some photos to get started</p>
+        {/* Floating Select Mode Button */}
+        {!selectMode && (
+          <div className="fixed bottom-6 right-6 z-50">
             <button
-              onClick={() => window.location.href = '/gallery/upload'}
-              className="px-6 py-3 bg-gray-900 text-white font-medium rounded-md hover:bg-gray-800"
+              onClick={() => setSelectMode(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg"
             >
-              Upload Photos
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </button>
           </div>
-        ) : (
-          <>
-            {/* 5-Column Grid */}
-            <div className="grid grid-cols-5 gap-0.5">
-              {images.map((image) => (
-                <div
-                  key={image.uuid}
-                  className="relative aspect-square cursor-pointer group overflow-hidden bg-gray-100"
-                  onClick={() => handleImageClick(image)}
-                >
-                  <img
-                    src={image.azure_blob_url}
-                    alt=""
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-between p-2">
-                    <div className="flex items-center gap-1 text-white text-xs font-medium">
-                      {image.faces > 0 && (
-                        <span className="flex items-center gap-1 bg-black/30 rounded-full px-2 py-1">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                          {image.faces}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="text-white text-xs opacity-70">
-                      {new Date(image.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-
-                  {/* Selection indicator */}
-                  {selectedImages.has(image.uuid) && (
-                    <div className="absolute top-1 right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Select mode overlay */}
-                  {selectMode && !selectedImages.has(image.uuid) && (
-                    <div className="absolute top-1 right-1 w-5 h-5 border-2 border-white rounded-full bg-black/20"></div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Instagram-style Pagination */}
-            {totalPages > 1 && (
-              <div className="py-8 flex justify-center">
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage <= 1}
-                    className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    {(() => {
-                      const maxVisible = 7;
-                      const startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-                      const endPage = Math.min(totalPages, startPage + maxVisible - 1);
-                      const pages = [];
-
-                      for (let i = startPage; i <= endPage; i++) {
-                        pages.push(
-                          <button
-                            key={i}
-                            onClick={() => setCurrentPage(i)}
-                            className={`w-8 h-8 text-sm rounded-md transition-colors ${
-                              i === currentPage
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                            }`}
-                          >
-                            {i}
-                          </button>
-                        );
-                      }
-
-                      return pages;
-                    })()}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage >= totalPages}
-                    className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="text-center pb-8 text-sm text-gray-500">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} photos
-            </div>
-          </>
         )}
-      </div>
 
-      {/* Floating Select Mode Button */}
-      {!selectMode && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <button
-            onClick={() => setSelectMode(true)}
-            className="bg-gray-900 hover:bg-gray-800 text-white p-4 rounded-full shadow-lg"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </button>
+        {/* Images Grid */}
+        <div className="p-4">
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+          ) : images.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📷</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No photos found</h3>
+              <p className="text-gray-500 mb-6">Upload some photos to get started</p>
+              <button
+                onClick={() => window.location.href = '/gallery/upload'}
+                className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700"
+              >
+                Upload Photos
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Instagram-style Grid */}
+              <div className="grid grid-cols-5 gap-0.5 md:gap-1">
+                {images.map((image) => (
+                  <div
+                    key={image.uuid}
+                    className="relative aspect-square cursor-pointer group overflow-hidden bg-gray-100"
+                    onClick={() => handleImageClick(image)}
+                  >
+                    <img
+                      src={image.azure_blob_url}
+                      alt=""
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-between p-2">
+                      <div className="flex items-center gap-1 text-white text-xs font-medium">
+                        {image.faces > 0 && (
+                          <span className="flex items-center gap-1 bg-black/30 rounded-full px-2 py-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                            </svg>
+                            {image.faces}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="text-white text-xs opacity-70">
+                        {new Date(image.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+
+                    {/* Selection indicator */}
+                    {selectedImages.has(image.uuid) && (
+                      <div className="absolute top-1 right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {/* Select mode overlay */}
+                    {selectMode && !selectedImages.has(image.uuid) && (
+                      <div className="absolute top-1 right-1 w-5 h-5 border-2 border-white rounded-full bg-black/20"></div>
+                    )}
+
+                    {/* Select mode overlay */}
+                    {selectMode && !selectedImages.has(image.uuid) && (
+                      <div className="absolute top-2 right-2 w-6 h-6 border-2 border-white rounded-full bg-black bg-opacity-30"></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Instagram-style Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage <= 1}
+                      className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const maxVisible = 7;
+                        const startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                        const endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                        const pages = [];
+
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              onClick={() => setCurrentPage(i)}
+                              className={`w-8 h-8 text-sm rounded-md transition-colors ${
+                                i === currentPage
+                                  ? 'bg-blue-600 text-white'
+                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                              }`}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+
+                        return pages;
+                      })()}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage >= totalPages}
+                      className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-center mt-4 text-sm text-gray-500">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} photos
+              </div>
+            </>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Enhanced Image Detail Modal with Person Selection */}
       <Modal
@@ -736,7 +692,7 @@ export default function GalleryPage() {
                         setShowDetailModal(false);
                       }
                     }}
-                    className="text-sm bg-gray-900 text-white px-3 py-1 rounded-md hover:bg-gray-800"
+                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700"
                   >
                     Filter by these people
                   </button>
@@ -754,7 +710,7 @@ export default function GalleryPage() {
                         }
                       }}
                     >
-                      <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center group-hover:border-gray-900 transition-colors">
+                      <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center group-hover:border-blue-500 transition-colors">
                         {croppedFaces[face.face_id.toString()] ? (
                           <img
                             src={croppedFaces[face.face_id.toString()]}

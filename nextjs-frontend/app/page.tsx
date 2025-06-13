@@ -40,41 +40,46 @@ const navigationItems = [
 export default function HomePage() {
   return (
     <div style={{ 
-      padding: '2rem', 
-      minHeight: 'calc(100vh - 80px)',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      minHeight: '100vh',
+      background: '#ffffff',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      padding: '2rem'
     }}>
-      <Card variant="elevated" padding="lg" style={{ maxWidth: '800px', width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+      <div style={{ 
+        maxWidth: '900px', 
+        width: '100%',
+        background: '#ffffff',
+        borderRadius: '0',
+        border: 'none',
+        boxShadow: 'none'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
           <h1 style={{ 
-            fontSize: '3.5rem', 
-            marginBottom: '1rem', 
-            color: '#2c3e50',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontWeight: 'bold'
+            fontSize: '4rem', 
+            marginBottom: '1.5rem', 
+            color: '#262626',
+            fontWeight: 'bold',
+            letterSpacing: '-0.02em'
           }}>
-            Welcome to Kanta
+            Kanta
           </h1>
           <p style={{ 
-            fontSize: '1.5rem', 
-            color: '#666', 
+            fontSize: '1.25rem', 
+            color: '#8e8e8e', 
             marginBottom: '0',
-            lineHeight: '1.6'
+            lineHeight: '1.5',
+            fontWeight: '400'
           }}>
-            Your AI-powered collaborative photo sharing platform
+            AI-powered collaborative photo sharing
           </p>
-        </div>
-        
+        </div>        
         {/* 2x2 Grid Layout */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '2rem',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+          gap: '1.5rem',
           marginTop: '2rem'
         }}>
           {navigationItems.map((item) => (
@@ -83,79 +88,92 @@ export default function HomePage() {
               href={item.href} 
               style={{ textDecoration: 'none' }}
             >
-              <Card
-                hoverable
+              <div
                 style={{
-                  background: item.gradient,
-                  color: '#fff',
-                  height: '180px',
+                  background: '#ffffff',
+                  border: '1px solid #dbdbdb',
+                  borderRadius: '12px',
+                  height: '200px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
                   alignItems: 'center',
                   position: 'relative',
                   cursor: 'pointer',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
                 }}
               >
-                <div style={{ 
+                <div style={{
                   position: 'absolute', 
                   top: '1rem', 
                   left: '1rem', 
-                  background: 'rgba(255,255,255,0.25)', 
+                  background: '#262626', 
+                  color: '#ffffff',
                   borderRadius: '50%',
-                  width: '2.5rem',
-                  height: '2.5rem',
+                  width: '2rem',
+                  height: '2rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.2rem',
+                  fontSize: '0.875rem',
                   fontWeight: 'bold'
                 }}>
                   {item.number}
                 </div>
                 
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
                   {item.icon}
                 </div>
                 
                 <h3 style={{ 
                   margin: '0 0 0.5rem 0', 
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold'
+                  fontSize: '1.25rem',
+                  fontWeight: 'bold',
+                  color: '#262626'
                 }}>
                   {item.title}
                 </h3>
                 
                 <p style={{ 
                   margin: 0, 
-                  opacity: 0.9, 
-                  fontSize: '1rem',
-                  fontWeight: '500'
+                  color: '#8e8e8e', 
+                  fontSize: '0.875rem',
+                  fontWeight: '400'
                 }}>
                   {item.description}
                 </p>
-              </Card>
+              </div>
             </Link>
           ))}
         </div>
         
         <div style={{ 
           textAlign: 'center', 
-          marginTop: '3rem', 
+          marginTop: '4rem', 
           padding: '2rem',
-          background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-          borderRadius: '12px'
+          background: '#fafafa',
+          borderRadius: '12px',
+          border: '1px solid #dbdbdb'
         }}>
-          <h3 style={{ color: '#2c3e50', marginBottom: '1rem' }}>
+          <h3 style={{ color: '#262626', marginBottom: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}>
             🚀 Getting Started
           </h3>
-          <p style={{ color: '#666', fontSize: '1.1rem', lineHeight: '1.6', margin: 0 }}>
+          <p style={{ color: '#8e8e8e', fontSize: '0.875rem', lineHeight: '1.6', margin: 0 }}>
             Select an event from the header dropdown, then start uploading photos or browse existing galleries. 
             Our AI will automatically detect and group faces to help you find photos of specific people.
           </p>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

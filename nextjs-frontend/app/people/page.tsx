@@ -245,60 +245,122 @@ export default function PeoplePage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-center text-4xl font-bold text-gray-800 mb-4">
-          People Recognition
-        </h1>
-        <p className="text-center text-gray-600 text-lg">
-          AI-detected people from <strong>{eventCode}</strong>
-        </p>
-        
-        {/* Special clusters info */}
-        {(unidentifiedCount > 0 || processingCount > 0) && (
-          <div className="mt-4 flex justify-center gap-4 text-sm">
-            {unidentifiedCount > 0 && (
-              <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">
-                {unidentifiedCount} unidentified faces
-              </div>
-            )}
-            {processingCount > 0 && (
-              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                {processingCount} processing faces
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+    <div style={{ 
+      minHeight: '100vh',
+      background: '#ffffff',
+      padding: '2rem'
+    }}>
+      <div style={{ 
+        maxWidth: '1200px', 
+        margin: '0 auto'
+      }}>
+        <div style={{ marginBottom: '3rem', textAlign: 'center' }}>
+          <h1 style={{ 
+            marginBottom: '0.5rem',
+            color: '#262626',
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            letterSpacing: '-0.02em'
+          }}>
+            People
+          </h1>
+          <p style={{ 
+            color: '#8e8e8e', 
+            fontSize: '1rem',
+            margin: 0
+          }}>
+            AI-detected people from <strong>{eventCode}</strong>
+          </p>
+          
+          {/* Special info */}
+          {(unidentifiedCount > 0 || processingCount > 0) && (
+            <div style={{ 
+              marginTop: '1rem', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: '1rem', 
+              fontSize: '0.875rem',
+              flexWrap: 'wrap'
+            }}>
+              {unidentifiedCount > 0 && (
+                <div style={{ 
+                  background: '#fef3c7', 
+                  color: '#d97706', 
+                  padding: '0.5rem 1rem', 
+                  borderRadius: '20px',
+                  border: '1px solid #f59e0b'
+                }}>
+                  {unidentifiedCount} unidentified faces
+                </div>
+              )}
+              {processingCount > 0 && (
+                <div style={{ 
+                  background: '#dbeafe', 
+                  color: '#2563eb', 
+                  padding: '0.5rem 1rem', 
+                  borderRadius: '20px',
+                  border: '1px solid #3b82f6'
+                }}>
+                  {processingCount} processing faces
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-      {clusters.length === 0 ? (
-        <Card padding="lg" className="text-center">
-          <div className="py-12">
-            <div className="text-6xl mb-4 text-gray-400">👤</div>
-            <h2 className="text-gray-500 text-xl mb-4">No People Detected Yet</h2>
-            <p className="text-gray-400 mb-8 text-lg">
-              Upload some photos with people to see AI face recognition in action
-            </p>
-            <Button onClick={() => window.location.href = '/gallery/upload'} size="lg">
-              Upload Photos
-            </Button>
-          </div>
-        </Card>
+        {clusters.length === 0 ? (
+        <div style={{ 
+          textAlign: 'center',
+          padding: '4rem 2rem',
+          background: '#ffffff',
+          border: '1px solid #dbdbdb',
+          borderRadius: '12px'
+        }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem', color: '#8e8e8e' }}>👤</div>
+          <h2 style={{ color: '#262626', marginBottom: '1rem', fontSize: '1.5rem', fontWeight: 'bold' }}>No People Detected Yet</h2>
+          <p style={{ color: '#8e8e8e', marginBottom: '2rem', fontSize: '1rem' }}>
+            Upload some photos with people to see AI face recognition in action
+          </p>
+          <Button onClick={() => window.location.href = '/gallery/upload'} size="lg">
+            Upload Photos
+          </Button>
+        </div>
       ) : (
         <>
           {/* Controls */}
-          <Card className="mb-8" padding="lg">
-            <div className="flex justify-between items-center flex-wrap gap-4">
+          <div style={{
+            marginBottom: '2rem',
+            background: '#ffffff',
+            border: '1px solid #dbdbdb',
+            borderRadius: '12px',
+            padding: '1.5rem'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              flexWrap: 'wrap', 
+              gap: '1rem'
+            }}>
               <div>
-                <h3 className="text-gray-700 font-semibold mb-2">
+                <h3 style={{ 
+                  color: '#262626', 
+                  fontWeight: 'bold', 
+                  marginBottom: '0.5rem',
+                  fontSize: '1.125rem'
+                }}>
                   Found {clusters.length} people ({selectedClusters.size} selected)
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p style={{ 
+                  color: '#8e8e8e', 
+                  fontSize: '0.875rem',
+                  margin: 0
+                }}>
                   Click on people to select them, then view their photos
                 </p>
               </div>
               
-              <div className="flex gap-3">
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <Button
                   onClick={handleSelectAll}
                   variant="secondary"
@@ -325,10 +387,14 @@ export default function PeoplePage() {
                 )}
               </div>
             </div>
-          </Card>
+          </div>
 
           {/* People Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+            gap: '1rem'
+          }}>
             {clusters.map((cluster) => {
               const currentSampleIndex = faceStates[cluster.cluster_id] || 0;
               const currentSample = cluster.samples[currentSampleIndex];
@@ -337,53 +403,103 @@ export default function PeoplePage() {
               const croppedFace = croppedFaces[faceKey];
 
               return (
-                <Card
+                <div
                   key={cluster.cluster_id}
-                  hoverable
-                  className={`cursor-pointer transition-all duration-300 relative ${
-                    isSelected 
-                      ? 'border-2 border-indigo-500 bg-indigo-50' 
-                      : 'border border-gray-200 bg-white hover:shadow-lg'
-                  }`}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                    background: '#ffffff',
+                    border: isSelected 
+                      ? '2px solid #262626' 
+                      : '1px solid #dbdbdb',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    textAlign: 'center',
+                    boxShadow: isSelected 
+                      ? '0 2px 8px rgba(0,0,0,0.15)' 
+                      : '0 1px 3px rgba(0,0,0,0.1)'
+                  }}
                   onClick={() => handleClusterClick(cluster.cluster_id)}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                    }
+                  }}
                 >
-                  <div className="text-center p-4">
+                  <div>
                     {/* Face Display */}
-                    <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
+                    <div style={{ 
+                      width: '8rem', 
+                      height: '8rem', 
+                      margin: '0 auto 1rem auto', 
+                      borderRadius: '50%', 
+                      overflow: 'hidden', 
+                      border: '2px solid #dbdbdb', 
+                      background: '#fafafa', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center'
+                    }}>
                       {croppedFace ? (
                         <Image
                           src={croppedFace}
                           alt={`Person ${cluster.cluster_id}`}
                           width={128}
                           height={128}
-                          className="w-full h-full object-cover"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           unoptimized
                         />
                       ) : (
-                        <div className="text-5xl text-gray-400">
+                        <div style={{ fontSize: '3rem', color: '#8e8e8e' }}>
                           👤
                         </div>
                       )}
                     </div>
 
                     {/* Info */}
-                    <h3 className="text-gray-800 font-semibold text-lg mb-2">
+                    <h3 style={{ 
+                      color: '#262626', 
+                      fontWeight: 'bold', 
+                      fontSize: '1rem', 
+                      marginBottom: '0.5rem'
+                    }}>
                       Person {cluster.cluster_id}
                     </h3>
                     
-                    <p className="text-gray-600 text-sm mb-2">
+                    <p style={{ 
+                      color: '#8e8e8e', 
+                      fontSize: '0.875rem', 
+                      marginBottom: '0.5rem'
+                    }}>
                       {cluster.face_count} photo{cluster.face_count !== 1 ? 's' : ''}
                     </p>
 
                     {/* Sample indicator */}
                     {cluster.samples.length > 1 && (
-                      <div className="flex justify-center gap-1 mt-2">
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        gap: '0.25rem', 
+                        marginTop: '0.5rem'
+                      }}>
                         {cluster.samples.slice(0, NUM_CLUSTER_SAMPLES).map((_, index) => (
                           <div
                             key={index}
-                            className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-                              index === currentSampleIndex ? 'bg-indigo-500' : 'bg-gray-300'
-                            }`}
+                            style={{
+                              width: '0.375rem',
+                              height: '0.375rem',
+                              borderRadius: '50%',
+                              transition: 'background-color 0.3s',
+                              background: index === currentSampleIndex ? '#262626' : '#dbdbdb'
+                            }}
                           />
                         ))}
                       </div>
@@ -391,17 +507,31 @@ export default function PeoplePage() {
 
                     {/* Selection indicator */}
                     {isSelected && (
-                      <div className="absolute top-4 right-4 bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                      <div style={{ 
+                        position: 'absolute', 
+                        top: '1rem', 
+                        right: '1rem', 
+                        background: '#262626', 
+                        color: '#ffffff', 
+                        borderRadius: '50%',
+                        width: '1.5rem',
+                        height: '1.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.75rem'
+                      }}>
                         ✓
                       </div>
                     )}
                   </div>
-                </Card>
+                </div>
               );
             })}
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

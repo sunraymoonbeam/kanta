@@ -195,85 +195,96 @@ export default function EventsPage() {
 
   return (
     <div style={{ 
-      padding: '2rem', 
-      maxWidth: '1200px', 
-      margin: '0 auto',
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      minHeight: '100vh'
+      minHeight: '100vh',
+      background: '#ffffff',
+      padding: '2rem'
     }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ 
-          textAlign: 'center', 
-          marginBottom: '1rem',
-          color: '#2c3e50',
-          fontSize: '2.5rem'
-        }}>
-          📅 Events Management
-        </h1>
-        <p style={{ 
-          textAlign: 'center', 
-          color: '#666', 
-          fontSize: '1.1rem' 
-        }}>
-          Create and manage your photo events
-        </p>
-      </div>
+      <div style={{ 
+        maxWidth: '1200px', 
+        margin: '0 auto'
+      }}>
+        <div style={{ marginBottom: '3rem', textAlign: 'center' }}>
+          <h1 style={{ 
+            marginBottom: '0.5rem',
+            color: '#262626',
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            letterSpacing: '-0.02em'
+          }}>
+            Events
+          </h1>
+          <p style={{ 
+            color: '#8e8e8e', 
+            fontSize: '1rem',
+            margin: 0
+          }}>
+            Create and manage your photo events
+          </p>
+        </div>
 
       {error && (
-        <Card style={{ marginBottom: '2rem', background: '#fee2e2' }}>
+        <div style={{ 
+          marginBottom: '2rem', 
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '12px',
+          padding: '1rem'
+        }}>
           <div style={{ color: '#dc2626', textAlign: 'center' }}>
             ⚠️ {error}
           </div>
-        </Card>
+        </div>
       )}
 
       {events.length === 0 ? (
-        <Card padding="lg" style={{ textAlign: 'center' }}>
-          <div style={{ padding: '3rem' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📅</div>
-            <h2 style={{ color: '#6b7280', marginBottom: '1rem' }}>No events yet</h2>
-            <p style={{ color: '#9ca3af', marginBottom: '2rem', fontSize: '1.1rem' }}>
-              Create your first event to start organizing photos
-            </p>
-            <Button onClick={() => openModal('create')} size="lg">
-              ✨ Create Your First Event
-            </Button>
-          </div>
-        </Card>
+        <div style={{ 
+          textAlign: 'center',
+          padding: '4rem 2rem',
+          background: '#ffffff',
+          border: '1px solid #dbdbdb',
+          borderRadius: '12px'
+        }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📅</div>
+          <h2 style={{ color: '#262626', marginBottom: '1rem', fontSize: '1.5rem', fontWeight: 'bold' }}>No events yet</h2>
+          <p style={{ color: '#8e8e8e', marginBottom: '2rem', fontSize: '1rem' }}>
+            Create your first event to start organizing photos
+          </p>
+          <Button onClick={() => openModal('create')} size="lg">
+            ✨ Create Your First Event
+          </Button>
+        </div>
       ) : (
         <>
           <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
             {events.map((event) => (
-              <Card 
+              <div 
                 key={event.code}
                 style={{
                   padding: '2rem',
                   marginBottom: '1.5rem',
-                  background: event.code === selected 
-                    ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' 
-                    : 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
+                  background: '#ffffff',
                   border: event.code === selected 
-                    ? '2px solid #0ea5e9' 
-                    : '1px solid #e5e7eb',
-                  borderRadius: '20px',
+                    ? '2px solid #262626' 
+                    : '1px solid #dbdbdb',
+                  borderRadius: '12px',
                   boxShadow: event.code === selected 
-                    ? '0 20px 60px rgba(14, 165, 233, 0.15), 0 8px 25px rgba(0,0,0,0.1)' 
-                    : '0 10px 40px rgba(0,0,0,0.08)',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    ? '0 4px 12px rgba(0,0,0,0.15)' 
+                    : '0 1px 3px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  cursor: 'pointer'
                 }}
-                hoverable
                 onMouseEnter={(e) => {
                   if (event.code !== selected) {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 15px 50px rgba(0,0,0,0.12)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (event.code !== selected) {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.08)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
                   }
                 }}
               >
@@ -294,7 +305,7 @@ export default function EventsPage() {
                           {event.name}
                         </h2>
                         <div style={{ 
-                          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%)',
+                          background: '#262626',
                           color: '#fff',
                           padding: '0.75rem 1.25rem',
                           borderRadius: '12px',
@@ -534,7 +545,7 @@ export default function EventsPage() {
                     </div>
                   )}
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
           
@@ -552,7 +563,13 @@ export default function EventsPage() {
                 width: '60px',
                 height: '60px',
                 fontSize: '1.5rem',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.2)'
+                background: '#262626',
+                border: 'none',
+                color: '#ffffff',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               +
@@ -961,6 +978,7 @@ export default function EventsPage() {
           </div>
         </div>
       </Modal>
+      </div>
     </div>
   );
 }
