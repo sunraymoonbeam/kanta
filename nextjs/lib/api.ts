@@ -2,6 +2,8 @@ import axios, { AxiosResponse } from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000/api/v1';
 
+console.log('API Base URL:', API_BASE_URL);
+
 const api = axios.create({ 
   baseURL: API_BASE_URL,
   timeout: 30000,
@@ -12,6 +14,8 @@ api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: any) => {
     console.error('API Error:', error.response?.data || error.message);
+    console.error('Request URL:', error.config?.url);
+    console.error('Base URL:', error.config?.baseURL);
     return Promise.reject(error);
   }
 );
