@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getImages, getImageDetail, deleteImage, generateCroppedFace, Image, ImagesParams } from '../../lib/api';
+import { getImages, getImageDetail, deleteImage, Image, ImagesParams } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
+import { cropAndEncodeFace, BoundingBox } from '../../utils/imageCrop';
 
 // Modal component
 function Modal({ isOpen, onClose, title, children }: { 
@@ -118,6 +119,8 @@ function GalleryPage() {
   }, [selected, filters, faceFilter]);
 
   const handleImageClick = async (image: Image) => {
+    console.log('Image clicked:', image.uuid);
+    
     if (selectMode) {
       const newSelected = new Set(selectedImages);
       if (newSelected.has(image.uuid)) {
@@ -133,18 +136,31 @@ function GalleryPage() {
     setLoading(true);
     
     try {
+      console.log('Fetching image detail for:', image.uuid);
       const detail = await getImageDetail(image.uuid);
+      console.log('Image detail received:', detail);
       setImageDetail(detail);
       
       // Generate cropped faces
       if (detail.face_details && detail.face_details.length > 0) {
+        console.log('Processing', detail.face_details.length, 'faces');
         const crops: { [key: string]: string } = {};
         for (const face of detail.face_details) {
           try {
-            const croppedFace = await generateCroppedFace(detail.azure_blob_url, face.bounding_box);
-            crops[face.uuid] = croppedFace;
+            console.log('Cropping face:', face.uuid);
+            const croppedFace = await cropAndEncodeFace(
+              detail.azure_blob_url, 
+              face.bounding_box as BoundingBox, 
+              [100, 100], // target size
+              0.15, // padding ratio x
+              0.15  // padding ratio y
+            );
+            if (croppedFace) {
+              crops[face.uuid] = croppedFace;
+              console.log('Face cropped successfully:', face.uuid);
+            }
           } catch (err) {
-            console.error('Failed to crop face:', err);
+            console.error('Failed to crop face:', face.uuid, err);
           }
         }
         setCroppedFaces(crops);

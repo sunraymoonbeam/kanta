@@ -15,8 +15,11 @@ export async function cropAndEncodeFace(
   padYRatio: number = 0.3
 ): Promise<string | null> {
   try {
-    // Fetch the image
-    const response = await fetch(imageUrl);
+    // Fetch the image with proper CORS handling
+    const response = await fetch(imageUrl, {
+      mode: 'cors',
+      credentials: 'omit'
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
@@ -25,6 +28,7 @@ export async function cropAndEncodeFace(
     
     // Create an image element
     const img = new Image();
+    img.crossOrigin = 'anonymous'; // Handle CORS for external images
     const imageLoadPromise = new Promise<HTMLImageElement>((resolve, reject) => {
       img.onload = () => resolve(img);
       img.onerror = reject;

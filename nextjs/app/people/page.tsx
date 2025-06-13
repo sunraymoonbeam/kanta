@@ -52,10 +52,17 @@ export default function PeoplePage() {
       });
       setFaceStates(initialStates);
       
-      // Generate cropped faces for all samples
+      // Generate cropped faces for all samples (limit processing to avoid performance issues)
       const crops: { [key: string]: string } = {};
+      let processedCount = 0;
+      const maxProcessing = 50; // Limit to prevent page freezing
+      
       for (const cluster of data) {
+        if (processedCount >= maxProcessing) break;
+        
         for (const sample of cluster.samples) {
+          if (processedCount >= maxProcessing) break;
+          
           if (sample.sample_bbox && 
               typeof sample.sample_bbox.x === 'number' &&
               typeof sample.sample_bbox.y === 'number' &&
@@ -71,6 +78,7 @@ export default function PeoplePage() {
               );
               if (croppedFace) {
                 crops[sample.face_id.toString()] = croppedFace;
+                processedCount++;
               }
             } catch (err) {
               console.error('Failed to crop face:', err);

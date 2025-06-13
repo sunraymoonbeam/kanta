@@ -72,11 +72,13 @@ function EventsPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
+  const [eventCodeConfirmation, setEventCodeConfirmation] = useState('');
 
   const closeModal = () => {
     setModalType(null);
     setSelectedEvent(null);
     setAdminPassword('');
+    setEventCodeConfirmation('');
     setImageFile(null);
     setForm({
       code: '',
@@ -151,6 +153,11 @@ function EventsPage() {
       return;
     }
 
+    if (eventCodeConfirmation !== eventCode) {
+      alert('Event code confirmation does not match. Please type the exact event code to confirm deletion.');
+      return;
+    }
+
     if (!confirm(`Are you sure you want to delete event "${eventCode}"? This action cannot be undone.`)) {
       return;
     }
@@ -211,11 +218,6 @@ function EventsPage() {
         });
       }
     }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
   };
 
   const downloadQRCode = (event: Event) => {
@@ -329,21 +331,6 @@ function EventsPage() {
                       }}>
                         {event.code}
                       </span>
-                      <button
-                        onClick={() => copyToClipboard(event.code)}
-                        style={{
-                          background: '#28a745',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '0.9rem',
-                          fontWeight: 'bold'
-                        }}
-                      >
-                        Copy Code
-                      </button>
                     </div>
                     {event.description && (
                       <p style={{ margin: '0 0 0.5rem 0', color: '#666' }}>
@@ -585,21 +572,6 @@ function EventsPage() {
                   }}>
                     {selectedEvent.code}
                   </span>
-                  <button
-                    onClick={() => copyToClipboard(selectedEvent.code)}
-                    style={{
-                      background: '#28a745',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    Copy Code
-                  </button>
                 </div>
               </div>
 
@@ -875,11 +847,30 @@ function EventsPage() {
                 />
               </div>
               
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Type Event Code to Confirm *
+                </label>
+                <input
+                  type="text"
+                  value={eventCodeConfirmation}
+                  onChange={(e) => setEventCodeConfirmation(e.target.value)}
+                  placeholder={`Type "${selectedEvent.code}" to confirm`}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+              
               <button
                 onClick={() => handleDelete(selectedEvent.code)}
-                disabled={submitting || !adminPassword}
+                disabled={submitting || !adminPassword || !eventCodeConfirmation}
                 style={{
-                  background: (!submitting && adminPassword) 
+                  background: (!submitting && adminPassword && eventCodeConfirmation) 
                     ? '#e74c3c' 
                     : '#ccc',
                   color: '#fff',
@@ -887,7 +878,7 @@ function EventsPage() {
                   padding: '1rem 2rem',
                   borderRadius: '8px',
                   fontSize: '1.1rem',
-                  cursor: (!submitting && adminPassword) ? 'pointer' : 'not-allowed',
+                  cursor: (!submitting && adminPassword && eventCodeConfirmation) ? 'pointer' : 'not-allowed',
                   width: '100%'
                 }}
               >
