@@ -1,6 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getEvents, createEvent, deleteEvent } from '../../lib/api';
+import {
+  getEvents,
+  createEvent,
+  deleteEvent,
+  updateEvent,
+  uploadEventImage,
+} from '../../lib/api';
 
 interface EventInfo {
   code: string;
@@ -8,6 +14,7 @@ interface EventInfo {
   description?: string;
   start_date_time?: string;
   end_date_time?: string;
+  event_image_url?: string;
 }
 
 export default function EventsPage() {
@@ -21,6 +28,14 @@ export default function EventsPage() {
     start: new Date().toISOString().slice(0, 16),
     end: new Date().toISOString().slice(0, 16),
   });
+  const [edit, setEdit] = useState(false);
+  const [updateForm, setUpdateForm] = useState({
+    name: '',
+    description: '',
+    start: '',
+    end: '',
+  });
+  const [imgFile, setImgFile] = useState<File>();
 
   useEffect(() => {
     getEvents().then((evts) => {
@@ -28,6 +43,18 @@ export default function EventsPage() {
       if (evts.length && !selected) setSelected(evts[0].code);
     });
   }, []);
+
+  useEffect(() => {
+    const current = events.find((e) => e.code === selected);
+    if (current) {
+      setUpdateForm({
+        name: current.name || '',
+        description: current.description || '',
+        start: current.start_date_time?.slice(0, 16) || '',
+        end: current.end_date_time?.slice(0, 16) || '',
+      });
+    }
+  }, [selected, events]);
 
   const current = events.find((e) => e.code === selected);
 
@@ -49,6 +76,22 @@ export default function EventsPage() {
     await deleteEvent(selected);
     setEvents(await getEvents());
     setSelected('');
+  };
+
+  const handleUpdate = async () => {
+    if (!selected) return;
+    await updateEvent({
+      event_code: selected,
+      name: updateForm.name,
+      description: updateForm.description,
+      start_date_time: new Date(updateForm.start).toISOString(),
+      end_date_time: new Date(updateForm.end).toISOString(),
+    });
+    if (imgFile) {
+      await uploadEventImage(selected, imgFile);
+    }
+    setEvents(await getEvents());
+    setEdit(false);
   };
 
   return (
@@ -78,8 +121,63 @@ export default function EventsPage() {
           </select>
           {current && (
             <div>
-              <h3>{current.name || current.code}</h3>
-              <p>{current.description}</p>
+              {!edit ? (
+                <>
+                  {current.event_image_url && (
+                    <img src={current.event_image_url} width={200} />
+                  )}
+                  <h3>{current.name || current.code}</h3>
+                  <p>{current.description}</p>
+                  <button onClick={() => setEdit(true)}>Edit</button>
+                </>
+              ) : (
+                <>
+                  <input
+                    placeholder="name"
+                    value={updateForm.name}
+                    onChange={(e) =>
+                      setUpdateForm({ ...updateForm, name: e.target.value })
+                    }
+                  />
+                  <br />
+                  <textarea
+                    placeholder="description"
+                    value={updateForm.description}
+                    onChange={(e) =>
+                      setUpdateForm({
+                        ...updateForm,
+                        description: e.target.value,
+                      })
+                    }
+                  />
+                  <br />
+                  <label>Start:</label>{' '}
+                  <input
+                    type="datetime-local"
+                    value={updateForm.start}
+                    onChange={(e) =>
+                      setUpdateForm({ ...updateForm, start: e.target.value })
+                    }
+                  />
+                  <br />
+                  <label>End:</label>{' '}
+                  <input
+                    type="datetime-local"
+                    value={updateForm.end}
+                    onChange={(e) =>
+                      setUpdateForm({ ...updateForm, end: e.target.value })
+                    }
+                  />
+                  <br />
+                  <input
+                    type="file"
+                    onChange={(e) => setImgFile(e.target.files?.[0])}
+                  />
+                  <br />
+                  <button onClick={handleUpdate}>Save</button>
+                  <button onClick={() => setEdit(false)}>Cancel</button>
+                </>
+              )}
             </div>
           )}
         </div>
