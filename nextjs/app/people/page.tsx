@@ -2,12 +2,18 @@
 import { useState, useEffect } from 'react';
 import { getClusters, findSimilarFaces, Cluster, Image } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
+import { useRouter } from 'next/navigation';
+
+const CLUSTER_ID_UNASSIGNED = -1;
+const CLUSTER_ID_PROCESSING = -2;
 
 export default function PeoplePage() {
   const { selected: eventCode } = useEvents();
+  const router = useRouter();
   const [tab, setTab] = useState<'people' | 'search'>('people');
   const [sampleSize, setSampleSize] = useState(3);
   const [clusters, setClusters] = useState<Cluster[]>([]);
+  const [selectedClusters, setSelectedClusters] = useState<Set<number>>(new Set());
   const [queryFile, setQueryFile] = useState<File>();
   const [results, setResults] = useState<Image[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,12 +49,55 @@ export default function PeoplePage() {
     }
   };
 
+  const toggleClusterSelection = (clusterId: number) => {
+    setSelectedClusters(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(clusterId)) {
+        newSet.delete(clusterId);
+      } else {
+        newSet.add(clusterId);
+      }
+      return newSet;
+    });
+  };
+
+  const browseSelectedPeople = () => {
+    if (selectedClusters.size === 0) {
+      alert('Please select people to browse');
+      return;
+    }
+    
+    // Navigate to gallery with face filter
+    const clusterIds = Array.from(selectedClusters).join(',');
+    router.push(`/gallery?faceFilter=${clusterIds}`);
+  };
+
+  const getClusterTitle = (cluster: Cluster) => {
+    if (cluster.cluster_id === CLUSTER_ID_UNASSIGNED) {
+      return '❓ Unidentified Faces';
+    }
+    if (cluster.cluster_id === CLUSTER_ID_PROCESSING) {
+      return '⏳ Processing Faces';
+    }
+    return `👤 Person ${cluster.cluster_id}`;
+  };
+
+  const getClusterDescription = (cluster: Cluster) => {
+    if (cluster.cluster_id === CLUSTER_ID_UNASSIGNED) {
+      return 'Faces that could not be grouped with others';
+    }
+    if (cluster.cluster_id === CLUSTER_ID_PROCESSING) {
+      return 'Faces currently being analyzed';
+    }
+    return `${cluster.face_count} face${cluster.face_count !== 1 ? 's' : ''} grouped together`;
+  };
+
   useEffect(() => {
     if (tab === 'people' && eventCode) {
       loadClusters();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventCode, tab]);
+  }, [eventCode, tab, sampleSize]);
 
   if (!eventCode) {
     return (
@@ -172,7 +221,7 @@ export default function PeoplePage() {
 
             {loading ? (
               <div style={{ textAlign: 'center', padding: '3rem' }}>
-                <div className="spinner"></div>
+                <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                 <p style={{ marginTop: '1rem', color: '#666' }}>Analyzing faces...</p>
               </div>
             ) : clusters.length === 0 ? (
@@ -182,62 +231,122 @@ export default function PeoplePage() {
                 </p>
               </div>
             ) : (
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-                gap: '2rem' 
-              }}>
-                {clusters.map((cluster, index) => (
-                  <div
-                    key={cluster.cluster_id}
+              <>
+                {/* Selection Controls */}
+                <div style={{ 
+                  marginBottom: '2rem',
+                  padding: '1rem',
+                  background: '#e3f2fd',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '1rem'
+                }}>
+                  <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
+                    {selectedClusters.size} of {clusters.filter(c => c.cluster_id >= 0).length} people selected
+                  </span>
+                  <button
+                    onClick={browseSelectedPeople}
+                    disabled={selectedClusters.size === 0}
                     style={{
-                      background: '#fff',
-                      border: '1px solid #ddd',
-                      borderRadius: '12px',
-                      padding: '1.5rem',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                      background: selectedClusters.size > 0 ? 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)' : '#ccc',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '6px',
+                      cursor: selectedClusters.size > 0 ? 'pointer' : 'not-allowed',
+                      fontSize: '1rem'
                     }}
                   >
-                    <h3 style={{ 
-                      margin: '0 0 1rem 0', 
-                      color: '#2c3e50',
-                      textAlign: 'center'
-                    }}>
-                      Person #{cluster.cluster_id}
-                    </h3>
-                    <p style={{ 
-                      textAlign: 'center', 
-                      color: '#666', 
-                      marginBottom: '1rem',
-                      fontSize: '0.9rem'
-                    }}>
-                      Found in {cluster.face_count} photo{cluster.face_count !== 1 ? 's' : ''}
-                    </p>
-                    
-                    <div style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: `repeat(${Math.min(cluster.samples.length, 3)}, 1fr)`, 
-                      gap: '0.5rem' 
-                    }}>
-                      {cluster.samples.map((sample, imgIndex) => (
-                        <div key={sample.face_id} style={{ textAlign: 'center' }}>
-                          <img
-                            src={sample.sample_blob_url}
-                            alt={`Person ${cluster.cluster_id} - ${imgIndex + 1}`}
-                            style={{
-                              width: '100%',
-                              height: '120px',
-                              objectFit: 'cover',
-                              borderRadius: '8px',
-                              border: '2px solid #eee'
-                            }}
-                          />
+                    🖼️ Browse Selected People ({selectedClusters.size})
+                  </button>
+                </div>
+
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+                  gap: '2rem' 
+                }}>
+                  {clusters.map((cluster) => {
+                    const isSelectable = cluster.cluster_id >= 0;
+                    const isSelected = selectedClusters.has(cluster.cluster_id);
+
+                    return (
+                      <div
+                        key={cluster.cluster_id}
+                        style={{
+                          background: '#fff',
+                          border: isSelected ? '2px solid #667eea' : '1px solid #ddd',
+                          borderRadius: '12px',
+                          padding: '1.5rem',
+                          boxShadow: isSelected ? '0 8px 25px rgba(102, 126, 234, 0.15)' : '0 4px 15px rgba(0,0,0,0.1)',
+                          cursor: isSelectable ? 'pointer' : 'default',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onClick={() => isSelectable && toggleClusterSelection(cluster.cluster_id)}
+                      >
+                        {/* Selection Checkbox for valid clusters */}
+                        {isSelectable && (
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            marginBottom: '1rem'
+                          }}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleClusterSelection(cluster.cluster_id)}
+                              style={{ transform: 'scale(1.2)' }}
+                            />
+                          </div>
+                        )}
+
+                        <h3 style={{ 
+                          margin: '0 0 1rem 0', 
+                          color: '#2c3e50',
+                          textAlign: 'center'
+                        }}>
+                          {getClusterTitle(cluster)}
+                        </h3>
+                        
+                        <p style={{ 
+                          textAlign: 'center', 
+                          color: '#666', 
+                          marginBottom: '1rem',
+                          fontSize: '0.9rem'
+                        }}>
+                          {getClusterDescription(cluster)}
+                        </p>
+                        
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: `repeat(${Math.min(cluster.samples.length, 3)}, 1fr)`, 
+                          gap: '0.5rem' 
+                        }}>
+                          {cluster.samples.map((sample, imgIndex) => (
+                            <div key={sample.face_id} style={{ textAlign: 'center' }}>
+                              <img
+                                src={sample.sample_blob_url}
+                                alt={`${getClusterTitle(cluster)} - ${imgIndex + 1}`}
+                                style={{
+                                  width: '100%',
+                                  height: '120px',
+                                  objectFit: 'cover',
+                                  borderRadius: '8px',
+                                  border: '2px solid #eee'
+                                }}
+                              />
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         )}
@@ -314,6 +423,7 @@ export default function PeoplePage() {
                         borderRadius: '8px',
                         overflow: 'hidden',
                         boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                        cursor: 'pointer',
                         transition: 'transform 0.3s ease'
                       }}
                       onMouseEnter={(e) => {
@@ -333,12 +443,14 @@ export default function PeoplePage() {
                         }}
                       />
                       <div style={{ padding: '1rem' }}>
-                        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>
-                          {image.filename || `Image.${image.file_extension}`}
-                        </h4>
                         <p style={{ margin: '0', fontSize: '0.8rem', color: '#666' }}>
                           📅 {new Date(image.created_at).toLocaleDateString()}
                         </p>
+                        {image.faces && image.faces > 0 && (
+                          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#888' }}>
+                            👥 {image.faces} face{image.faces !== 1 ? 's' : ''}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -347,14 +459,21 @@ export default function PeoplePage() {
             )}
 
             {searchLoading && (
-              <div style={{ textAlign: 'center', padding: '3rem' }}>
-                <div className="spinner"></div>
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                 <p style={{ marginTop: '1rem', color: '#666' }}>Searching for similar faces...</p>
               </div>
             )}
           </div>
         )}
       </div>
+      
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
