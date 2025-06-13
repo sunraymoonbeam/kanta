@@ -184,17 +184,14 @@ function EventsPage() {
       await refresh();
       alert('Event image uploaded successfully!');
       setImageFile(null);
-      // Refresh the selected event data to show updated image immediately
+      // Refresh the selected event data
       const updatedEvent = events.find(e => e.code === eventCode);
       if (updatedEvent) {
         setSelectedEvent(updatedEvent);
       }
-      // Force a page refresh to ensure image is displayed
-      window.location.reload();
     } catch (error: any) {
       console.error('Failed to upload image:', error);
-      const errorMessage = error.response?.data?.detail || error.message || 'Unknown error';
-      alert(`Failed to upload image: ${errorMessage}`);
+      alert(`Failed to upload image: ${error.response?.data?.detail || error.message}`);
     } finally {
       setUploadingImage(false);
     }
@@ -320,7 +317,7 @@ function EventsPage() {
                       marginBottom: '0.5rem' 
                     }}>
                       <span style={{ 
-                        fontSize: '1.5rem',
+                        fontSize: '2.5rem',
                         fontWeight: 'bold',
                         fontFamily: 'monospace',
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

@@ -73,20 +73,15 @@ function GalleryPage() {
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
   const [faceFilter, setFaceFilter] = useState<number | null>(null);
   
-  // Filter states - comprehensive filters like Streamlit
+  // Filter states
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
     minFaces: '',
     maxFaces: '',
-    limit: 20,
-    offset: 0,
-    page: 1
+    limit: 50,
+    offset: 0
   });
-  
-  // Additional filter states for face filtering
-  const [peopleFilter, setPeopleFilter] = useState<number[]>([]);
-  const [showFilters, setShowFilters] = useState(true);
 
   const fetchImages = async () => {
     if (!selected) return;
@@ -98,19 +93,18 @@ function GalleryPage() {
       const params: ImagesParams = {
         event_code: selected,
         limit: filters.limit,
-        offset: (filters.page - 1) * filters.limit,
+        offset: filters.offset,
       };
       
-      if (filters.startDate) params.date_from = new Date(filters.startDate).toISOString();
-      if (filters.endDate) params.date_to = new Date(filters.endDate).toISOString();
+      if (filters.startDate) params.start_date = filters.startDate;
+      if (filters.endDate) params.end_date = filters.endDate;
       if (filters.minFaces) params.min_faces = parseInt(filters.minFaces);
       if (filters.maxFaces) params.max_faces = parseInt(filters.maxFaces);
-      if (faceFilter !== null) params.cluster_list_id = [faceFilter];
-      if (peopleFilter.length > 0) params.cluster_list_id = peopleFilter;
+      if (faceFilter !== null) params.face_uuid = faceFilter.toString();
       
       const response = await getImages(params);
-      setImages(response.images || response);
-      setTotalCount(response.total_count || (response as any).length || 0);
+      setImages(response.images);
+      setTotalCount(response.total_count);
     } catch (err: any) {
       console.error('Failed to fetch images:', err);
       setError('Failed to load images. Please try again.');
@@ -211,6 +205,14 @@ function GalleryPage() {
     });
   };
 
+  const nextPage = () => {
+    setFilters(prev => ({ ...prev, offset: prev.offset + prev.limit }));
+  };
+
+  const prevPage = () => {
+    setFilters(prev => ({ ...prev, offset: Math.max(0, prev.offset - prev.limit) }));
+  };
+
   const clearFaceFilter = () => {
     setFaceFilter(null);
   };
@@ -247,219 +249,105 @@ function GalleryPage() {
           fontSize: '2.5rem'
         }}>Gallery - {selected}</h1>
 
-        {/* Comprehensive Filters - Like Streamlit */}
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ margin: 0, color: '#2c3e50' }}>Filters</h3>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
+        {/* Filters */}
+        <div style={{ 
+          background: '#f8f9fa', 
+          padding: '1rem', 
+          borderRadius: '8px', 
+          marginBottom: '2rem',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem'
+        }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Start Date:
+            </label>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
               style={{
-                background: 'none',
+                width: '100%',
+                padding: '0.5rem',
                 border: '1px solid #ddd',
-                padding: '0.5rem 1rem',
-                borderRadius: '4px',
-                cursor: 'pointer'
+                borderRadius: '4px'
               }}
-            >
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </button>
+            />
           </div>
           
-          {showFilters && (
-            <div style={{ 
-              background: '#f8f9fa', 
-              padding: '1.5rem', 
-              borderRadius: '8px',
-              border: '1px solid #ddd'
-            }}>
-              {/* Date Filters */}
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                gap: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    From Date:
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.startDate}
-                    onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value, page: 1 }))}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    To Date:
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.endDate}
-                    onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value, page: 1 }))}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    Min Faces:
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={filters.minFaces}
-                    onChange={(e) => setFilters(prev => ({ ...prev, minFaces: e.target.value, page: 1 }))}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    Max Faces:
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={filters.maxFaces}
-                    onChange={(e) => setFilters(prev => ({ ...prev, maxFaces: e.target.value, page: 1 }))}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }}
-                  />
-                </div>
-              </div>
-              
-              {/* Pagination Controls */}
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
-                gap: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    Images per page:
-                  </label>
-                  <select
-                    value={filters.limit}
-                    onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }}
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={30}>30</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    Page:
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={filters.page}
-                    onChange={(e) => setFilters(prev => ({ ...prev, page: parseInt(e.target.value) || 1 }))}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }}
-                  />
-                </div>
-              </div>
-              
-              {/* Filter Actions */}
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => {
-                    setFilters({
-                      startDate: '',
-                      endDate: '',
-                      minFaces: '',
-                      maxFaces: '',
-                      limit: 20,
-                      offset: 0,
-                      page: 1
-                    });
-                    setFaceFilter(null);
-                    setPeopleFilter([]);
-                  }}
-                  style={{
-                    background: '#6c757d',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Clear All Filters
-                </button>
-                
-                {faceFilter !== null && (
-                  <button
-                    onClick={() => setFaceFilter(null)}
-                    style={{
-                      background: '#dc3545',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Clear Face Filter (Person {faceFilter})
-                  </button>
-                )}
-                
-                {peopleFilter.length > 0 && (
-                  <button
-                    onClick={() => setPeopleFilter([])}
-                    style={{
-                      background: '#dc3545',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Clear People Filter ({peopleFilter.length} selected)
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              End Date:
+            </label>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px'
+              }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Min Faces:
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={filters.minFaces}
+              onChange={(e) => setFilters(prev => ({ ...prev, minFaces: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px'
+              }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Max Faces:
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={filters.maxFaces}
+              onChange={(e) => setFilters(prev => ({ ...prev, maxFaces: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px'
+              }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Images per page:
+            </label>
+            <select
+              value={filters.limit}
+              onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), offset: 0 }))}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px'
+              }}
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
         </div>
 
         {/* Face Filter Display */}
@@ -552,33 +440,33 @@ function GalleryPage() {
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span style={{ color: '#666' }}>
-              Showing {((filters.page - 1) * filters.limit) + 1}-{Math.min(filters.page * filters.limit, totalCount)} of {totalCount} (Page {filters.page} of {Math.ceil(totalCount / filters.limit)})
+              Showing {filters.offset + 1}-{Math.min(filters.offset + filters.limit, totalCount)} of {totalCount}
             </span>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={() => setFilters(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-                disabled={filters.page <= 1}
+                onClick={prevPage}
+                disabled={filters.offset === 0}
                 style={{
-                  background: filters.page <= 1 ? '#ccc' : '#6c757d',
+                  background: filters.offset === 0 ? '#ccc' : '#6c757d',
                   color: '#fff',
                   border: 'none',
                   padding: '0.5rem 1rem',
                   borderRadius: '4px',
-                  cursor: filters.page <= 1 ? 'not-allowed' : 'pointer'
+                  cursor: filters.offset === 0 ? 'not-allowed' : 'pointer'
                 }}
               >
                 Previous
               </button>
               <button
-                onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
-                disabled={filters.page >= Math.ceil(totalCount / filters.limit)}
+                onClick={nextPage}
+                disabled={filters.offset + filters.limit >= totalCount}
                 style={{
-                  background: filters.page >= Math.ceil(totalCount / filters.limit) ? '#ccc' : '#6c757d',
+                  background: filters.offset + filters.limit >= totalCount ? '#ccc' : '#6c757d',
                   color: '#fff',
                   border: 'none',
                   padding: '0.5rem 1rem',
                   borderRadius: '4px',
-                  cursor: filters.page >= Math.ceil(totalCount / filters.limit) ? 'not-allowed' : 'pointer'
+                  cursor: filters.offset + filters.limit >= totalCount ? 'not-allowed' : 'pointer'
                 }}
               >
                 Next

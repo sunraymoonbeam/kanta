@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { getClusters, Cluster } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { cropAndEncodeFace, BoundingBox } from '../../utils/imageCrop';
 
 const CLUSTER_ID_UNASSIGNED = -1;
 const CLUSTER_ID_PROCESSING = -2;
@@ -21,6 +22,7 @@ export default function PeoplePage() {
   const [loading, setLoading] = useState(false);
   const [faceStates, setFaceStates] = useState<CyclingFaceState>({});
   const [faceFilter, setFaceFilter] = useState<number | null>(null);
+  const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
 
   // Check for face filter from URL params
   useEffect(() => {
@@ -49,6 +51,35 @@ export default function PeoplePage() {
         }
       });
       setFaceStates(initialStates);
+      
+      // Generate cropped faces for all samples
+      const crops: { [key: string]: string } = {};
+      for (const cluster of data) {
+        for (const sample of cluster.samples) {
+          if (sample.sample_bbox && 
+              typeof sample.sample_bbox.x === 'number' &&
+              typeof sample.sample_bbox.y === 'number' &&
+              typeof sample.sample_bbox.width === 'number' &&
+              typeof sample.sample_bbox.height === 'number') {
+            try {
+              const croppedFace = await cropAndEncodeFace(
+                sample.sample_blob_url,
+                sample.sample_bbox as BoundingBox,
+                [120, 120], // target size
+                0.15, // padding ratio x
+                0.15  // padding ratio y
+              );
+              if (croppedFace) {
+                crops[sample.face_id.toString()] = croppedFace;
+              }
+            } catch (err) {
+              console.error('Failed to crop face:', err);
+            }
+          }
+        }
+      }
+      setCroppedFaces(crops);
+      
     } catch (error) {
       console.error('Failed to load clusters:', error);
       setClusters([]);
@@ -344,19 +375,37 @@ export default function PeoplePage() {
                     {/* Face Image - Cycling */}
                     {currentSample && (
                       <div style={{ marginBottom: '1rem' }}>
-                        <img
-                          src={currentSample.sample_blob_url}
-                          alt={`${getClusterTitle(cluster)}`}
-                          style={{
+                        {croppedFaces[currentSample.face_id.toString()] ? (
+                          <img
+                            src={croppedFaces[currentSample.face_id.toString()]}
+                            alt={`${getClusterTitle(cluster)}`}
+                            style={{
+                              width: '120px',
+                              height: '120px',
+                              objectFit: 'cover',
+                              borderRadius: '50%',
+                              border: '3px solid #eee',
+                              margin: '0 auto',
+                              transition: 'opacity 0.5s ease'
+                            }}
+                          />
+                        ) : (
+                          <div style={{
                             width: '120px',
                             height: '120px',
-                            objectFit: 'cover',
+                            background: '#f0f0f0',
                             borderRadius: '50%',
                             border: '3px solid #eee',
                             margin: '0 auto',
-                            transition: 'opacity 0.5s ease'
-                          }}
-                        />
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#666',
+                            fontSize: '0.9rem'
+                          }}>
+                            Loading...
+                          </div>
+                        )}
                       </div>
                     )}
 
