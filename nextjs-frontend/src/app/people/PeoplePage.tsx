@@ -47,8 +47,10 @@ export default function PeoplePage() {
   const handleFilterBySelected = () => {
     if (selectedClusters.size > 0) {
       const ids = Array.from(selectedClusters);
-      // Apply filter logic here
-      console.log("Filtering by cluster IDs:", ids);
+      // Navigate to gallery with face filter
+      const queryParams = new URLSearchParams();
+      queryParams.set('faceFilter', ids.join(','));
+      window.location.href = `/gallery?${queryParams.toString()}`;
     }
   };
 
