@@ -90,28 +90,55 @@ export default function PeoplePage() {
       });
       setFaceStates(initialStates);
       
-      // Generate cropped faces for all samples (simplified approach for performance)
+      // Generate cropped faces for all samples
       const crops: { [key: string]: string } = {};
       let processedCount = 0;
-      const maxProcessing = 20; // Limit to prevent page freezing
+      const maxProcessing = 50; // Increase limit for better user experience
       
       for (const cluster of data) {
         if (processedCount >= maxProcessing) break;
         
-        for (const sample of cluster.samples.slice(0, 2)) { // Only process first 2 samples per cluster
+        for (const sample of cluster.samples.slice(0, 3)) { // Process up to 3 samples per cluster
           if (processedCount >= maxProcessing) break;
           
-          // For now, use a simple placeholder approach for better performance
-          // In production, you'd want to implement efficient server-side cropping
-          const placeholderColor = `hsl(${(sample.face_id * 137.5) % 360}, 70%, 80%)`;
-          const svgPlaceholder = `data:image/svg+xml;base64,${btoa(`
-            <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="60" cy="60" r="55" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
-              <text x="60" y="65" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
-            </svg>
-          `)}`;
-          crops[sample.face_id.toString()] = svgPlaceholder;
-          processedCount++;
+          try {
+            // Use the crop API to get actual cropped faces
+            const params = new URLSearchParams({
+              url: sample.sample_blob_url,
+              x: String(sample.sample_bbox.x),
+              y: String(sample.sample_bbox.y),
+              width: String(sample.sample_bbox.width),
+              height: String(sample.sample_bbox.height),
+            });
+            
+            const res = await fetch(`/api/crop?${params.toString()}`);
+            if (res.ok) {
+              const base64 = await res.json();
+              crops[sample.face_id.toString()] = base64;
+              processedCount++;
+            } else {
+              // Fallback to placeholder if crop fails
+              const placeholderColor = `hsl(${(sample.face_id * 137.5) % 360}, 70%, 80%)`;
+              const svgPlaceholder = `data:image/svg+xml;base64,${btoa(`
+                <svg width="150" height="150" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="75" cy="75" r="70" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
+                  <text x="75" y="80" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
+                </svg>
+              `)}`;
+              crops[sample.face_id.toString()] = svgPlaceholder;
+            }
+          } catch (error) {
+            console.error('Error cropping face:', error);
+            // Fallback to placeholder
+            const placeholderColor = `hsl(${(sample.face_id * 137.5) % 360}, 70%, 80%)`;
+            const svgPlaceholder = `data:image/svg+xml;base64,${btoa(`
+              <svg width="150" height="150" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="75" cy="75" r="70" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
+                <text x="75" y="80" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
+              </svg>
+            `)}`;
+            crops[sample.face_id.toString()] = svgPlaceholder;
+          }
         }
       }
       setCroppedFaces(crops);
@@ -370,13 +397,13 @@ export default function PeoplePage() {
                 const currentSampleIndex = faceStates[cluster.cluster_id] || 0;
                 const currentSample = cluster.samples[currentSampleIndex] || cluster.samples[0];
                 
-                // Use a colorful placeholder for better visual representation
+                // Use cropped face or fallback to placeholder
                 const placeholderColor = `hsl(${(cluster.cluster_id * 137.5) % 360}, 70%, 80%)`;
                 const displayImage = croppedFaces[currentSample?.face_id?.toString()] || 
                   `data:image/svg+xml;base64,${btoa(`
-                    <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="60" cy="60" r="55" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
-                      <text x="60" y="65" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
+                    <svg width="150" height="150" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="75" cy="75" r="70" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
+                      <text x="75" y="80" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
                     </svg>
                   `)}`;
 
@@ -401,8 +428,8 @@ export default function PeoplePage() {
                         src={displayImage}
                         alt={`Person ${cluster.cluster_id}`}
                         style={{
-                          width: '100px',
-                          height: '100px',
+                          width: '120px',
+                          height: '120px',
                           borderRadius: '50%',
                           objectFit: 'cover',
                           border: '3px solid #fff',

@@ -273,6 +273,29 @@ function GalleryPage() {
     applyFaceFilter(null);
   };
 
+  const addToFaceFilter = (clusterId: number) => {
+    const currentFilter = faceFilter || [];
+    if (!currentFilter.includes(clusterId)) {
+      const newFilter = [...currentFilter, clusterId].sort((a, b) => a - b);
+      applyFaceFilter(newFilter);
+    }
+  };
+
+  const removeFromFaceFilter = (clusterId: number) => {
+    const currentFilter = faceFilter || [];
+    const newFilter = currentFilter.filter(id => id !== clusterId);
+    applyFaceFilter(newFilter.length > 0 ? newFilter : null);
+  };
+
+  const toggleFaceFilter = (clusterId: number) => {
+    const currentFilter = faceFilter || [];
+    if (currentFilter.includes(clusterId)) {
+      removeFromFaceFilter(clusterId);
+    } else {
+      addToFaceFilter(clusterId);
+    }
+  };
+
   if (!selected) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -407,31 +430,54 @@ function GalleryPage() {
           </div>
         </div>
 
-        {/* Face Filter Display */}
+        {/* Face Filter Display with Enhanced Information */}
         {faceFilter !== null && (
           <div style={{
-            background: '#e3f2fd',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            marginBottom: '1.5rem',
+            border: '2px solid #2196f3',
+            boxShadow: '0 4px 12px rgba(33, 150, 243, 0.15)'
           }}>
-            <span>Filtering by people: {faceFilter.join(', ')}</span>
-            <button
-              onClick={clearFaceFilter}
-              style={{
-                background: '#f44336',
-                color: '#fff',
-                border: 'none',
-                padding: '0.5rem 1rem',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Clear Face Filter
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h3 style={{ margin: 0, color: '#1565c0', fontSize: '1.1rem' }}>
+                🔍 People Filter Active
+              </h3>
+              <button
+                onClick={clearFaceFilter}
+                style={{
+                  background: '#f44336',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: 'bold'
+                }}
+              >
+                Clear Filter
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+              <span style={{ color: '#1976d2', fontWeight: 'bold' }}>Showing images with:</span>
+              {faceFilter.map((clusterId, index) => (
+                <span
+                  key={clusterId}
+                  style={{
+                    background: '#2196f3',
+                    color: '#fff',
+                    padding: '0.3rem 0.8rem',
+                    borderRadius: '15px',
+                    fontSize: '0.85rem',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Person {clusterId}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
@@ -658,54 +704,73 @@ function GalleryPage() {
                   <h3>Detected Faces:</h3>
                   <div style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
                     gap: '1rem',
                     marginBottom: '1rem'
                   }}>
-                    {imageDetail.faces.map((face) => (
-                      <div
-                        key={face.face_id}
-                        onClick={() => applyFaceFilter([face.cluster_id])}
-                        style={{
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          padding: '0.5rem',
-                          border: faceFilter?.includes(face.cluster_id) ? '2px solid #007bff' : '1px solid #ddd',
-                          borderRadius: '8px',
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {croppedFaces[face.face_id.toString()] ? (
-                          <img 
-                            src={croppedFaces[face.face_id.toString()]}
-                            alt="Cropped face"
-                            style={{
+                    {imageDetail.faces.map((face) => {
+                      const isInFilter = faceFilter?.includes(face.cluster_id) || false;
+                      return (
+                        <div
+                          key={face.face_id}
+                          style={{
+                            textAlign: 'center',
+                            padding: '0.75rem',
+                            border: isInFilter ? '3px solid #007bff' : '2px solid #ddd',
+                            borderRadius: '12px',
+                            transition: 'all 0.3s ease',
+                            background: isInFilter ? '#f8f9ff' : '#fff',
+                            cursor: 'pointer',
+                            transform: isInFilter ? 'scale(1.02)' : 'scale(1)',
+                            boxShadow: isInFilter ? '0 4px 12px rgba(0,123,255,0.2)' : '0 2px 6px rgba(0,0,0,0.1)'
+                          }}
+                          onClick={() => toggleFaceFilter(face.cluster_id)}
+                        >
+                          {croppedFaces[face.face_id.toString()] ? (
+                            <img 
+                              src={croppedFaces[face.face_id.toString()]}
+                              alt="Cropped face"
+                              style={{
+                                width: '100px',
+                                height: '100px',
+                                objectFit: 'cover',
+                                borderRadius: '8px',
+                                marginBottom: '0.5rem'
+                              }}
+                            />
+                          ) : (
+                            <div style={{
                               width: '100px',
                               height: '100px',
-                              objectFit: 'cover',
+                              background: '#f0f0f0',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                               borderRadius: '8px',
-                              marginBottom: '0.5rem'
-                            }}
-                          />
-                        ) : (
-                          <div style={{
-                            width: '100px',
-                            height: '100px',
-                            background: '#f0f0f0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '8px',
-                            marginBottom: '0.5rem'
+                              marginBottom: '0.5rem',
+                              fontSize: '0.8rem',
+                              color: '#666'
+                            }}>
+                              Loading...
+                            </div>
+                          )}
+                          <div style={{ 
+                            fontSize: '0.9rem', 
+                            fontWeight: 'bold',
+                            color: isInFilter ? '#007bff' : '#333',
+                            marginBottom: '0.2rem'
                           }}>
-                            Loading...
+                            Person {face.cluster_id}
                           </div>
-                        )}
-                        <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                          Person {face.cluster_id}
+                          <div style={{ 
+                            fontSize: '0.7rem', 
+                            color: isInFilter ? '#007bff' : '#666'
+                          }}>
+                            {isInFilter ? 'In Filter' : 'Click to Filter'}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <p style={{ fontSize: '0.9rem', color: '#666', fontStyle: 'italic' }}>
                     Click on a face to filter gallery by similar faces
