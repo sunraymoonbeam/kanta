@@ -34,6 +34,11 @@ export default function CameraPage() {
   const [uploadedShots, setUploadedShots] = useState<CapturedShot[]>([]);
   const [selectedShots, setSelectedShots] = useState<Set<string>>(new Set());
   
+  // Progress tracking states
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [totalProgress, setTotalProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -146,18 +151,41 @@ export default function CameraPage() {
     if (!eventCode || deviceFiles.length === 0) return;
     
     setDeviceUploading(true);
+    setIsUploading(true);
+    setTotalProgress(0);
     const results = { successes: 0, errors: 0 };
     
     try {
       for (let i = 0; i < deviceFiles.length; i++) {
         const file = deviceFiles[i];
+        const fileId = `device-${i}`;
+        setUploadProgress(prev => ({ ...prev, [fileId]: 0 }));
+        
         try {
+          // Simulate progress (since we don't have actual upload progress from the API)
+          const progressInterval = setInterval(() => {
+            setUploadProgress(prev => {
+              const currentProgress = prev[fileId] || 0;
+              if (currentProgress < 90) {
+                return { ...prev, [fileId]: currentProgress + 10 };
+              }
+              return prev;
+            });
+          }, 100);
+          
           await uploadImage(eventCode, file);
+          clearInterval(progressInterval);
+          
+          setUploadProgress(prev => ({ ...prev, [fileId]: 100 }));
           results.successes++;
         } catch (error) {
           console.error(`Failed to upload ${file.name}:`, error);
+          setUploadProgress(prev => ({ ...prev, [fileId]: -1 })); // -1 indicates error
           results.errors++;
         }
+        
+        // Update total progress
+        setTotalProgress(((i + 1) / deviceFiles.length) * 100);
       }
       
       if (results.successes > 0) {
@@ -177,6 +205,9 @@ export default function CameraPage() {
       
     } finally {
       setDeviceUploading(false);
+      setIsUploading(false);
+      setUploadProgress({});
+      setTotalProgress(0);
     }
   };
 
@@ -366,6 +397,41 @@ export default function CameraPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Progress Bar */}
+            {isUploading && (
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ 
+                  background: '#f5f5f5', 
+                  borderRadius: '8px', 
+                  padding: '1rem',
+                  border: '1px solid #ddd'
+                }}>
+                  <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
+                    Uploading... {Math.round(totalProgress)}%
+                  </p>
+                  <div style={{
+                    width: '100%',
+                    height: '20px',
+                    background: '#e0e0e0',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <div style={{
+                      width: `${totalProgress}%`,
+                      height: '100%',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      transition: 'width 0.3s ease',
+                      borderRadius: '10px'
+                    }} />
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                    Please wait while your images are being uploaded...
+                  </div>
                 </div>
               </div>
             )}

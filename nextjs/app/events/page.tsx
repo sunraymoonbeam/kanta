@@ -184,14 +184,17 @@ function EventsPage() {
       await refresh();
       alert('Event image uploaded successfully!');
       setImageFile(null);
-      // Refresh the selected event data
+      // Refresh the selected event data to show updated image immediately
       const updatedEvent = events.find(e => e.code === eventCode);
       if (updatedEvent) {
         setSelectedEvent(updatedEvent);
       }
+      // Force a page refresh to ensure image is displayed
+      window.location.reload();
     } catch (error: any) {
       console.error('Failed to upload image:', error);
-      alert(`Failed to upload image: ${error.response?.data?.detail || error.message}`);
+      const errorMessage = error.response?.data?.detail || error.message || 'Unknown error';
+      alert(`Failed to upload image: ${errorMessage}`);
     } finally {
       setUploadingImage(false);
     }
@@ -248,83 +251,7 @@ function EventsPage() {
           marginBottom: '2rem',
           color: '#2c3e50',
           fontSize: '2.5rem'
-        }}>Events Manager</h1>
-        
-        {/* Feature Grid */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '2rem', 
-          marginBottom: '3rem' 
-        }}>
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <img 
-              src="https://cdn.prod.website-files.com/673d196dcbdffd5878aa34c3/67450441a62191954ce549e9_4-creative-qr-code-ideas-to-enhance-your-wedding-experience-wf.webp"
-              alt="Create Events"
-              style={{ 
-                width: '200px', 
-                height: '150px', 
-                objectFit: 'cover', 
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            />
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Create</h3>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Generate and share your QR code</p>
-          </div>
-          
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <img 
-              src="https://images.airtasker.com/v7/https://airtasker-seo-assets-prod.s3.amazonaws.com/en_AU/1715328328533-event-photographers-hero.jpg"
-              alt="Capture Events"
-              style={{ 
-                width: '200px', 
-                height: '150px', 
-                objectFit: 'cover', 
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            />
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Capture</h3>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Capture moments live</p>
-          </div>
-          
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <img 
-              src="https://photos.smugmug.com/BLOG/Blog-images/i-4DzMFWZ/0/NCg78ZfVGwLThZt3BVVJkBNq7VgL2LmzdVTHmXfnd/XL/%40RobHammPhoto%20%236%28c%292017RobertHamm-XL.jpg"
-              alt="Explore Gallery"
-              style={{ 
-                width: '200px', 
-                height: '150px', 
-                objectFit: 'cover', 
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            />
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Explore</h3>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>All your photos in one album</p>
-          </div>
-          
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <img 
-              src="https://production-rhino-website-crm.s3.ap-southeast-1.amazonaws.com/Face_Recognition_17a30dc38b.png"
-              alt="Find People"
-              style={{ 
-                width: '200px', 
-                height: '150px', 
-                objectFit: 'cover', 
-                borderRadius: '12px',
-                marginBottom: '1rem',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            />
-            <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Find People</h3>
-            <p style={{ color: '#666', fontSize: '0.9rem' }}>Smart face grouping</p>
-          </div>
-        </div>
+        }}>Events</h1>
 
         {error && (
           <div style={{ 
@@ -383,7 +310,7 @@ function EventsPage() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>
+                    <h3 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50', fontSize: '2.5rem' }}>
                       {event.name}
                     </h3>
                     <div style={{ 
@@ -949,9 +876,6 @@ function EventsPage() {
                     fontSize: '1rem'
                   }}
                 />
-                <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
-                  Default password: password123
-                </p>
               </div>
               
               <button

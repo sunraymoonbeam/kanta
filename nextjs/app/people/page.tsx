@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { getClusters, Cluster } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const CLUSTER_ID_UNASSIGNED = -1;
 const CLUSTER_ID_PROCESSING = -2;
@@ -15,10 +15,23 @@ interface CyclingFaceState {
 export default function PeoplePage() {
   const { selected: eventCode } = useEvents();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [selectedClusters, setSelectedClusters] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [faceStates, setFaceStates] = useState<CyclingFaceState>({});
+  const [faceFilter, setFaceFilter] = useState<number | null>(null);
+
+  // Check for face filter from URL params
+  useEffect(() => {
+    const faceFilterParam = searchParams.get('faceFilter');
+    if (faceFilterParam) {
+      const clusterId = parseInt(faceFilterParam);
+      if (!isNaN(clusterId)) {
+        setFaceFilter(clusterId);
+      }
+    }
+  }, [searchParams]);
 
   const loadClusters = async () => {
     if (!eventCode) return;
@@ -65,6 +78,14 @@ export default function PeoplePage() {
     // Navigate to gallery with face filter
     const clusterIds = Array.from(selectedClusters).join(',');
     router.push(`/gallery?faceFilter=${clusterIds}`);
+  };
+
+  const clearFaceFilter = () => {
+    setFaceFilter(null);
+    // Remove faceFilter from URL
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('faceFilter');
+    window.history.replaceState({}, '', newUrl.toString());
   };
 
   const getClusterTitle = (cluster: Cluster) => {
@@ -181,7 +202,8 @@ export default function PeoplePage() {
           padding: '1rem',
           background: '#f8f9fa',
           borderRadius: '8px',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          flexWrap: 'wrap'
         }}>
           <button
             onClick={loadClusters}
@@ -198,6 +220,35 @@ export default function PeoplePage() {
           >
             {loading ? 'Loading...' : 'Refresh People'}
           </button>
+
+          {faceFilter !== null && (
+            <div style={{
+              background: '#e3f2fd',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem'
+            }}>
+              <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
+                Filtering by Person {faceFilter}
+              </span>
+              <button
+                onClick={clearFaceFilter}
+                style={{
+                  background: '#f44336',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Clear Filter
+              </button>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -250,7 +301,7 @@ export default function PeoplePage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
               gap: '2rem' 
             }}>
-              {clusters.map((cluster) => {
+              {clusters.filter(cluster => faceFilter === null || cluster.cluster_id === faceFilter).map((cluster) => {
                 const isSelectable = cluster.cluster_id >= 0;
                 const isSelected = selectedClusters.has(cluster.cluster_id);
                 const currentSampleIndex = faceStates[cluster.cluster_id] || 0;
@@ -326,13 +377,9 @@ export default function PeoplePage() {
                     </p>
 
                     {cluster.samples.length > 1 && (
-                      <p style={{ 
-                        color: '#888', 
-                        fontSize: '0.7rem',
-                        fontStyle: 'italic'
-                      }}>
-                        Cycling through {cluster.samples.length} samples
-                      </p>
+                      <div style={{ 
+                        height: '1rem'  // Maintain spacing without text
+                      }} />
                     )}
                   </div>
                 );
