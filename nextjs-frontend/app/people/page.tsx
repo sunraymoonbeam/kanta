@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 const CLUSTER_ID_UNASSIGNED = -1;
 const CLUSTER_ID_PROCESSING = -2;
-const FACE_CYCLE_INTERVAL = 2000; // 2 seconds
+const FACE_CYCLE_INTERVAL = 7000; // 2 seconds
 const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
 const NUM_CLUSTER_SAMPLES = 5; // Number of samples to process per cluster
 
