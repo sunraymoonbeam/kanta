@@ -1,69 +1,108 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getClusters, Cluster } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { cropAndEncodeFace } from '../../utils/imageCrop';
-
 
 const CLUSTER_ID_UNASSIGNED = -1;
 const CLUSTER_ID_PROCESSING = -2;
 const FACE_CYCLE_INTERVAL = 2000; // 2 seconds
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+const NUM_CLUSTER_SAMPLES = 5; // Number of samples to process per cluster
 
 interface CyclingFaceState {
   [clusterId: number]: number; // Current sample index for each cluster
+}
+
+interface CacheEntry {
+  data: Cluster[];
+  timestamp: number;
 }
 
 export default function PeoplePage() {
   const { selected: eventCode } = useEvents();
   const router = useRouter();
   const searchParams = useSearchParams();
+  
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [selectedClusters, setSelectedClusters] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [faceStates, setFaceStates] = useState<CyclingFaceState>({});
   const [faceFilter, setFaceFilter] = useState<number[] | null>(null);
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
-  const [clustersCache, setClustersCache] = useState<{ [key: string]: { data: Cluster[], timestamp: number } }>({});
+  const [clustersCache, setClustersCache] = useState<{ [key: string]: CacheEntry }>({});
+  const [cropError, setCropError] = useState<Set<string>>(new Set());
 
-  const applyFaceFilter = (ids: number[] | null) => {
+  // Memoized function to apply face filter
+  const applyFaceFilter = useCallback((ids: number[] | null) => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (ids && ids.length > 0) {
         params.set('faceFilter', ids.join(','));
-        setFaceFilter(ids);
       } else {
         params.delete('faceFilter');
-        setFaceFilter(null);
       }
       const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
       window.history.replaceState({}, '', newUrl);
-    } else {
-      setFaceFilter(ids && ids.length > 0 ? ids : null);
     }
-  };
+    setFaceFilter(ids && ids.length > 0 ? ids : null);
+  }, []);
 
   // Check for face filter from URL params
   useEffect(() => {
     const faceFilterParam = searchParams.get('faceFilter');
     if (faceFilterParam) {
-      const clusterIds = faceFilterParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      const clusterIds = faceFilterParam.split(',')
+        .map(id => parseInt(id.trim()))
+        .filter(id => !isNaN(id));
       if (clusterIds.length > 0) {
         setFaceFilter(clusterIds);
       }
     }
   }, [searchParams]);
 
-  const loadClusters = async (forceRefresh = false) => {
+  // Crop face with better error handling
+  const cropFace = async (sample: any): Promise<string | null> => {
+    const faceKey = sample.face_id.toString();
+    
+    if (cropError.has(faceKey)) {
+      return null; // Don't retry failed crops
+    }
+
+    try {
+      const params = new URLSearchParams({
+        url: sample.sample_blob_url,
+        x: String(sample.sample_bbox.x),
+        y: String(sample.sample_bbox.y),
+        width: String(sample.sample_bbox.width),
+        height: String(sample.sample_bbox.height),
+      });
+      
+      const res = await fetch(`/api/crop?${params.toString()}`);
+      if (res.ok) {
+        const base64 = await res.json();
+        return base64;
+      } else {
+        console.warn(`Failed to crop face ${faceKey}: ${res.status}`);
+        setCropError(prev => new Set([...prev, faceKey]));
+        return null;
+      }
+    } catch (error) {
+      console.error('Error cropping face:', error);
+      setCropError(prev => new Set([...prev, faceKey]));
+      return null;
+    }
+  };
+
+  const loadClusters = useCallback(async (forceRefresh = false) => {
     if (!eventCode) return;
     
-    // Check cache first (5 minutes expiry)
-    const cacheKey = `${eventCode}_5`;
+    // Check cache first
+    const cacheKey = `${eventCode}_${NUM_CLUSTER_SAMPLES}`;
     const cached = clustersCache[cacheKey];
     const now = Date.now();
-    const cacheExpiry = 5 * 60 * 1000; // 5 minutes
     
-    if (!forceRefresh && cached && (now - cached.timestamp) < cacheExpiry) {
+    if (!forceRefresh && cached && (now - cached.timestamp) < CACHE_EXPIRY) {
       console.log('Using cached clusters data');
       setClusters(cached.data);
       return;
@@ -72,7 +111,7 @@ export default function PeoplePage() {
     setLoading(true);
     try {
       console.log('Fetching fresh clusters data');
-      const data = await getClusters(eventCode, 5); // Get 5 samples for cycling
+      const data = await getClusters(eventCode, NUM_CLUSTER_SAMPLES);
       setClusters(data);
       
       // Update cache
@@ -92,52 +131,13 @@ export default function PeoplePage() {
       
       // Generate cropped faces for all samples
       const crops: { [key: string]: string } = {};
-      let processedCount = 0;
-      const maxProcessing = 50; // Increase limit for better user experience
       
       for (const cluster of data) {
-        if (processedCount >= maxProcessing) break;
-        
-        for (const sample of cluster.samples.slice(0, 3)) { // Process up to 3 samples per cluster
-          if (processedCount >= maxProcessing) break;
-          
-          try {
-            // Use the crop API to get actual cropped faces
-            const params = new URLSearchParams({
-              url: sample.sample_blob_url,
-              x: String(sample.sample_bbox.x),
-              y: String(sample.sample_bbox.y),
-              width: String(sample.sample_bbox.width),
-              height: String(sample.sample_bbox.height),
-            });
-            
-            const res = await fetch(`/api/crop?${params.toString()}`);
-            if (res.ok) {
-              const base64 = await res.json();
-              crops[sample.face_id.toString()] = base64;
-              processedCount++;
-            } else {
-              // Fallback to placeholder if crop fails
-              const placeholderColor = `hsl(${(sample.face_id * 137.5) % 360}, 70%, 80%)`;
-              const svgPlaceholder = `data:image/svg+xml;base64,${btoa(`
-                <svg width="150" height="150" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="75" cy="75" r="70" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
-                  <text x="75" y="80" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
-                </svg>
-              `)}`;
-              crops[sample.face_id.toString()] = svgPlaceholder;
-            }
-          } catch (error) {
-            console.error('Error cropping face:', error);
-            // Fallback to placeholder
-            const placeholderColor = `hsl(${(sample.face_id * 137.5) % 360}, 70%, 80%)`;
-            const svgPlaceholder = `data:image/svg+xml;base64,${btoa(`
-              <svg width="150" height="150" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="75" cy="75" r="70" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
-                <text x="75" y="80" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
-              </svg>
-            `)}`;
-            crops[sample.face_id.toString()] = svgPlaceholder;
+        // Process all samples for each cluster
+        for (const sample of cluster.samples) {
+          const croppedFace = await cropFace(sample);
+          if (croppedFace) {
+            crops[sample.face_id.toString()] = croppedFace;
           }
         }
       }
@@ -149,9 +149,10 @@ export default function PeoplePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventCode, clustersCache]);
 
-  const toggleClusterSelection = (clusterId: number) => {
+
+  const toggleClusterSelection = useCallback((clusterId: number) => {
     setSelectedClusters(prev => {
       const newSet = new Set(prev);
       if (newSet.has(clusterId)) {
@@ -161,23 +162,22 @@ export default function PeoplePage() {
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const browseSelectedPeople = () => {
+  const browseSelectedPeople = useCallback(() => {
     if (selectedClusters.size === 0) {
       alert('Please select people to browse');
       return;
     }
     
-    // Navigate to gallery with face filter
     const clusterIds = Array.from(selectedClusters).join(',');
     console.log('Navigating to gallery with cluster IDs:', clusterIds);
     router.push(`/gallery?faceFilter=${clusterIds}`);
-  };
+  }, [selectedClusters, router]);
 
-  const clearFaceFilter = () => {
+  const clearFaceFilter = useCallback(() => {
     applyFaceFilter(null);
-  };
+  }, [applyFaceFilter]);
 
   const getClusterTitle = (cluster: Cluster) => {
     if (cluster.cluster_id === CLUSTER_ID_UNASSIGNED) {
@@ -198,8 +198,10 @@ export default function PeoplePage() {
     return processingCluster ? processingCluster.face_count : 0;
   };
 
-  // Cycle through face samples every few seconds
+  // Cycle through face samples
   useEffect(() => {
+    if (clusters.length === 0) return;
+
     const interval = setInterval(() => {
       setFaceStates(prev => {
         const newStates = { ...prev };
@@ -218,8 +220,7 @@ export default function PeoplePage() {
 
   useEffect(() => {
     loadClusters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventCode]);
+  }, [loadClusters]);
 
   if (!eventCode) {
     return (
@@ -229,6 +230,10 @@ export default function PeoplePage() {
       </div>
     );
   }
+
+  const filteredClusters = clusters.filter(cluster => 
+    faceFilter === null || faceFilter.includes(cluster.cluster_id)
+  );
 
   return (
     <div style={{ 
@@ -249,7 +254,9 @@ export default function PeoplePage() {
           marginBottom: '2rem',
           color: '#2c3e50',
           fontSize: '2.5rem'
-        }}>People Recognition</h1>
+        }}>
+          People Recognition
+        </h1>
 
         <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
           <span style={{ 
@@ -285,6 +292,7 @@ export default function PeoplePage() {
           )}
         </div>
 
+        {/* Controls */}
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
@@ -344,7 +352,15 @@ export default function PeoplePage() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+            <div style={{ 
+              display: 'inline-block', 
+              width: '40px', 
+              height: '40px', 
+              border: '4px solid #f3f3f3', 
+              borderTop: '4px solid #667eea', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite' 
+            }}></div>
             <p style={{ marginTop: '1rem', color: '#666' }}>Analyzing faces...</p>
           </div>
         ) : clusters.length === 0 ? (
@@ -387,26 +403,20 @@ export default function PeoplePage() {
               </button>
             </div>
 
+            {/* People Grid */}
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
               gap: '2rem' 
             }}>
-              {clusters.filter(cluster => faceFilter === null || faceFilter.includes(cluster.cluster_id)).map((cluster) => {
+              {filteredClusters.map((cluster) => {
                 const isSelectable = cluster.cluster_id >= 0;
                 const isSelected = selectedClusters.has(cluster.cluster_id);
                 const currentSampleIndex = faceStates[cluster.cluster_id] || 0;
                 const currentSample = cluster.samples[currentSampleIndex] || cluster.samples[0];
                 
-                // Use cropped face or fallback to placeholder
-                const placeholderColor = `hsl(${(cluster.cluster_id * 137.5) % 360}, 70%, 80%)`;
-                const displayImage = croppedFaces[currentSample?.face_id?.toString()] || 
-                  `data:image/svg+xml;base64,${btoa(`
-                    <svg width="150" height="150" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="75" cy="75" r="70" fill="${placeholderColor}" stroke="#ddd" stroke-width="2"/>
-                      <text x="75" y="80" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">${cluster.cluster_id}</text>
-                    </svg>
-                  `)}`;
+                // Only show cropped face if available, otherwise show nothing
+                const displayImage = currentSample ? croppedFaces[currentSample.face_id?.toString()] : null;
 
                 return (
                   <div
@@ -425,18 +435,43 @@ export default function PeoplePage() {
                     onClick={() => isSelectable && toggleClusterSelection(cluster.cluster_id)}
                   >
                     <div style={{ marginBottom: '1rem' }}>
-                      <img
-                        src={displayImage}
-                        alt={`Person ${cluster.cluster_id}`}
-                        style={{
-                          width: '120px',
-                          height: '120px',
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: '3px solid #fff',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                        }}
-                      />
+                      {displayImage ? (
+                        <img
+                          src={displayImage}
+                          alt={`Person ${cluster.cluster_id}`}
+                          style={{
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '3px solid #fff',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                          }}
+                          onError={(e) => {
+                            console.warn(`Failed to load image for cluster ${cluster.cluster_id}`);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            background: '#f0f0f0',
+                            border: '3px solid #fff',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto',
+                            fontSize: '0.8rem',
+                            color: '#666'
+                          }}
+                        >
+                          No Image
+                        </div>
+                      )}
                     </div>
                     
                     <h3 style={{ 
@@ -481,4 +516,3 @@ export default function PeoplePage() {
     </div>
   );
 }
-

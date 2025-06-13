@@ -21,19 +21,31 @@ export async function GET(request: NextRequest) {
     }
     
     const imageBuffer = await response.arrayBuffer();
+    const sharpImage = sharp(Buffer.from(imageBuffer));
+    
+    // Get image metadata to check dimensions
+    const metadata = await sharpImage.metadata();
+    const imgWidth = metadata.width || 0;
+    const imgHeight = metadata.height || 0;
     
     // Calculate cropping parameters with padding
     const padding = 0.3;
     const padX = Math.floor(width * padding);
     const padY = Math.floor(height * padding);
     
+    // Calculate crop area with bounds checking
     const cropX = Math.max(0, x - padX);
     const cropY = Math.max(0, y - padY);
-    const cropWidth = width + 2 * padX;
-    const cropHeight = height + 2 * padY;
+    const cropWidth = Math.min(width + 2 * padX, imgWidth - cropX);
+    const cropHeight = Math.min(height + 2 * padY, imgHeight - cropY);
+    
+    // Ensure crop dimensions are positive
+    if (cropWidth <= 0 || cropHeight <= 0) {
+      throw new Error('Invalid crop dimensions');
+    }
 
     // Use sharp to crop and resize the image
-    const croppedImageBuffer = await sharp(Buffer.from(imageBuffer))
+    const croppedImageBuffer = await sharpImage
       .extract({
         left: cropX,
         top: cropY,

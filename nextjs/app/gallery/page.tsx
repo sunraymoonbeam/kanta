@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { getImages, getImageDetail, deleteImage, Image, ImagesParams, ImageDetail } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 
-
 // Modal component
 function Modal({ isOpen, onClose, title, children }: { 
   isOpen: boolean; 
@@ -91,26 +90,19 @@ function GalleryPage() {
     }
   };
   
-  // Add URL search params handling
-  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
-  
   // Initialize search params on client side only
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      setSearchParams(params);
       
       // Check for face filter from URL params
       const faceFilterParam = params.get('faceFilter');
-      console.log('URL faceFilterParam:', faceFilterParam);
       if (faceFilterParam) {
         const clusterIds = faceFilterParam
           .split(',')
           .map(id => parseInt(id.trim()))
           .filter(id => !isNaN(id));
-        console.log('Parsed cluster IDs:', clusterIds);
         if (clusterIds.length > 0) {
-          console.log('Setting face filter to:', clusterIds);
           setFaceFilter(clusterIds);
         }
       }
@@ -144,17 +136,14 @@ function GalleryPage() {
       if (filters.endDate) params.date_to = filters.endDate;
       if (filters.minFaces) params.min_faces = parseInt(filters.minFaces);
       if (filters.maxFaces) params.max_faces = parseInt(filters.maxFaces);
-      if (faceFilter !== null && faceFilter.length > 0) {
+      if (faceFilter && faceFilter.length > 0) {
         params.cluster_list_id = faceFilter;
-        console.log('Applied face filter:', faceFilter);
       }
       
-      console.log('API params:', params);
       const response = await getImages(params);
-      console.log('API response:', response);
       setImages(response.images);
       setTotalCount(response.total_count);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch images:', err);
       setError('Failed to load images. Please try again.');
     } finally {
@@ -167,8 +156,6 @@ function GalleryPage() {
   }, [selected, filters, faceFilter]);
 
   const handleImageClick = async (image: Image) => {
-    console.log('Image clicked:', image.uuid);
-    
     if (selectMode) {
       const newSelected = new Set(selectedImages);
       if (newSelected.has(image.uuid)) {
@@ -184,14 +171,11 @@ function GalleryPage() {
     setLoading(true);
     
     try {
-      console.log('Fetching image detail for:', image.uuid);
       const detail = await getImageDetail(image.uuid);
-      console.log('Image detail received:', detail);
       setImageDetail(detail);
       
       // Generate cropped faces
       if (detail.faces && detail.faces.length > 0) {
-        console.log('Processing', detail.faces.length, 'faces');
         const crops: { [key: string]: string } = {};
         for (const face of detail.faces) {
           try {
@@ -215,7 +199,7 @@ function GalleryPage() {
       }
       
       setShowDetailModal(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch image detail:', err);
       setError('Failed to load image details.');
     } finally {
@@ -224,7 +208,13 @@ function GalleryPage() {
   };
 
   const handleDeleteSelected = async () => {
-    const expectedPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password123';
+    // Get admin password from environment variable
+    const expectedPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    
+    if (!expectedPassword) {
+      alert('Admin password not configured');
+      return;
+    }
     
     if (adminPassword !== expectedPassword) {
       alert('Invalid admin password');
@@ -249,7 +239,7 @@ function GalleryPage() {
       setAdminPassword('');
       await fetchImages();
       alert('Selected images deleted successfully!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to delete images:', err);
       alert('Failed to delete some images. Please try again.');
     } finally {
@@ -323,6 +313,14 @@ function GalleryPage() {
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
       minHeight: '100vh'
     }}>
+      {/* CSS for spinner animation */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
       <div style={{ 
         background: '#fff', 
         borderRadius: '12px', 
@@ -438,8 +436,8 @@ function GalleryPage() {
           </div>
         </div>
 
-        {/* Face Filter Display with Enhanced Information */}
-        {faceFilter !== null && (
+        {/* Face Filter Display */}
+        {faceFilter && faceFilter.length > 0 && (
           <div style={{
             background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
             padding: '1.5rem',
@@ -470,7 +468,7 @@ function GalleryPage() {
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
               <span style={{ color: '#1976d2', fontWeight: 'bold' }}>Showing images with:</span>
-              {faceFilter.map((clusterId, index) => (
+              {faceFilter.map((clusterId) => (
                 <span
                   key={clusterId}
                   style={{
@@ -601,7 +599,15 @@ function GalleryPage() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+            <div style={{ 
+              display: 'inline-block', 
+              width: '40px', 
+              height: '40px', 
+              border: '4px solid #f3f3f3', 
+              borderTop: '4px solid #667eea', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite' 
+            }}></div>
             <p style={{ marginTop: '1rem', color: '#666' }}>Loading images...</p>
           </div>
         ) : images.length === 0 ? (
