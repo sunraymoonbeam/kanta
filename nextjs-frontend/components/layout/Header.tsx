@@ -6,127 +6,59 @@ export default function Header() {
   const { events, selected, setSelected, loading, error } = useEvents();
   
   return (
-    <header style={{ 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-      padding: '1rem',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-    }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        maxWidth: '1200px', 
-        margin: '0 auto' 
-      }}>
-        <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-          <Link href="/" style={{ 
-            color: '#fff', 
-            textDecoration: 'none', 
-            fontWeight: 'bold',
-            fontSize: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            📸 Kanta
+    <header className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 shadow-lg">
+      <div className="flex items-center justify-between max-w-6xl mx-auto">
+        <div className="flex gap-8 items-center">
+          <Link href="/" className="text-white text-xl font-bold flex items-center gap-2 hover:text-indigo-200 transition-colors">
+            Kanta
           </Link>
           
-          <nav style={{ display: 'flex', gap: '1rem' }}>
+          <nav className="flex gap-4">
             <Link 
               href="/events" 
-              style={{ 
-                color: '#fff', 
-                textDecoration: 'none', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '6px', 
-                transition: 'background 0.2s',
-                fontSize: '1rem'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              className="text-white px-4 py-2 rounded-md hover:bg-white hover:bg-opacity-10 transition-all duration-200"
             >
               Events
             </Link>
             <Link 
-              href="/gallery/upload" 
-              style={{ 
-                color: '#fff', 
-                textDecoration: 'none', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '6px', 
-                transition: 'background 0.2s',
-                fontSize: '1rem'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              href="/gallery/upload"
+              className="text-white px-4 py-2 rounded-md hover:bg-white hover:bg-opacity-10 transition-all duration-200"
             >
               Upload
             </Link>
             <Link 
               href="/gallery" 
-              style={{ 
-                color: '#fff', 
-                textDecoration: 'none', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '6px', 
-                transition: 'background 0.2s',
-                fontSize: '1rem'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              className="text-white px-4 py-2 rounded-md hover:bg-white hover:bg-opacity-10 transition-all duration-200"
             >
               Gallery
             </Link>
             <Link 
               href="/people" 
-              style={{ 
-                color: '#fff', 
-                textDecoration: 'none', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '6px', 
-                transition: 'background 0.2s',
-                fontSize: '1rem'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              className="text-white px-4 py-2 rounded-md hover:bg-white hover:bg-opacity-10 transition-all duration-200"
             >
               People
             </Link>
           </nav>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="flex items-center gap-4">
           {error && (
-            <span style={{ 
-              color: '#ff6b6b', 
-              fontSize: '0.9rem',
-              background: 'rgba(255,255,255,0.1)',
-              padding: '0.25rem 0.75rem',
-              borderRadius: '4px'
-            }}>
-              ⚠️ {error}
+            <span className="text-red-200 text-sm bg-white bg-opacity-10 px-3 py-1 rounded">
+              {error}
             </span>
           )}
           
           {loading ? (
-            <span style={{ color: '#fff', fontSize: '0.9rem' }}>Loading events...</span>
+            <span className="text-white text-sm">Loading events...</span>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <label style={{ color: '#fff', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+            <div className="flex flex-col items-end">
+              <label className="text-white text-xs mb-1">
                 Selected Event:
               </label>
               <select 
                 value={selected} 
                 onChange={(e) => setSelected(e.target.value)}
-                style={{ 
-                  padding: '0.5rem', 
-                  borderRadius: '6px', 
-                  border: 'none',
-                  background: 'rgba(255,255,255,0.95)',
-                  minWidth: '180px',
-                  fontSize: '0.9rem',
-                  fontWeight: '500'
-                }}
+                className="p-2 rounded-md border-none bg-white bg-opacity-95 min-w-48 text-sm font-medium focus:ring-2 focus:ring-white focus:ring-opacity-50"
               >
                 {events.length === 0 ? (
                   <option value="">No events available</option>

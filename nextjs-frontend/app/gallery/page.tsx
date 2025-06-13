@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import JSZip from 'jszip';
 import { getImages, getImageDetail, deleteImage } from '../../lib/api';
 import { useEvents } from '../../hooks/useEvents';
 import { Image, ImageDetail, ImagesParams } from '../../types/images';
@@ -27,6 +28,7 @@ export default function GalleryPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
   const [faceFilter, setFaceFilter] = useState<number[] | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -189,14 +191,70 @@ export default function GalleryPage() {
     }
   };
 
+  const downloadSelectedImages = async () => {
+    if (selectedImages.size === 0) {
+      alert('Please select images to download');
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const zip = new JSZip();
+      const imagesToDownload = images.filter(img => selectedImages.has(img.uuid));
+
+      // Create a progress indicator
+      let processed = 0;
+      const total = imagesToDownload.length;
+
+      for (const image of imagesToDownload) {
+        try {
+          const response = await fetch(image.azure_blob_url);
+          const blob = await response.blob();
+          
+          // Get file extension from the URL or default to jpg
+          const extension = image.file_extension || 'jpg';
+          const filename = `${image.uuid}.${extension}`;
+          
+          zip.file(filename, blob);
+          processed++;
+          
+          // Update progress (you could show this to user)
+          console.log(`Downloaded ${processed}/${total} images`);
+        } catch (error) {
+          console.error(`Failed to download image ${image.uuid}:`, error);
+        }
+      }
+
+      // Generate the zip file
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // Create download link
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${selected}_photos_${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      alert(`Successfully downloaded ${processed} images`);
+    } catch (error) {
+      console.error('Failed to create zip file:', error);
+      alert('Failed to download images. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   if (!selected) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <div className="p-8 text-center">
         <Card padding="lg">
-          <h2 style={{ color: '#e74c3c', marginBottom: '1rem' }}>No Event Selected</h2>
-          <p style={{ color: '#666', fontSize: '1.1rem' }}>
+          <h2 className="text-red-500 text-xl font-semibold mb-4">No Event Selected</h2>
+          <p className="text-gray-600 text-lg">
             Please select an event from the header dropdown to view photos.
           </p>
         </Card>
@@ -205,71 +263,44 @@ export default function GalleryPage() {
   }
 
   return (
-    <div style={{ 
-      padding: '2rem', 
-      maxWidth: '1400px', 
-      margin: '0 auto',
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      minHeight: '100vh'
-    }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ 
-          textAlign: 'center', 
-          marginBottom: '1rem',
-          color: '#2c3e50',
-          fontSize: '2.5rem'
-        }}>
-          🖼️ Photo Gallery
+    <div className="p-8 max-w-7xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-center text-4xl font-bold text-gray-800 mb-4">
+          Photo Gallery
         </h1>
-        <p style={{ 
-          textAlign: 'center', 
-          color: '#666', 
-          fontSize: '1.1rem' 
-        }}>
+        <p className="text-center text-gray-600 text-lg">
           Browse photos from <strong>{selected}</strong>
         </p>
-      </div>
-
-      {/* Filters */}
-      <Card style={{ marginBottom: '2rem' }} padding="lg">
-        <h3 style={{ marginBottom: '1rem', color: '#374151' }}>🔍 Filters</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+      </div>      {/* Filters */}
+      <Card className="mb-8" padding="lg">
+        <h3 className="mb-4 text-gray-700 text-lg font-semibold">Filters</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+            <label className="block mb-2 font-semibold text-gray-700">
               Start Date
             </label>
             <input
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px'
-              }}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+            <label className="block mb-2 font-semibold text-gray-700">
               End Date
             </label>
             <input
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px'
-              }}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+            <label className="block mb-2 font-semibold text-gray-700">
               Min Faces
             </label>
             <input
@@ -277,17 +308,12 @@ export default function GalleryPage() {
               min="0"
               value={filters.minFaces}
               onChange={(e) => setFilters({ ...filters, minFaces: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px'
-              }}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+            <label className="block mb-2 font-semibold text-gray-700">
               Max Faces
             </label>
             <input
@@ -295,17 +321,12 @@ export default function GalleryPage() {
               min="0"
               value={filters.maxFaces}
               onChange={(e) => setFilters({ ...filters, maxFaces: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px'
-              }}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>
         
-        <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+        <div className="mt-4 flex flex-wrap gap-3">
           <Button
             onClick={() => {
               setCurrentPage(1);
@@ -313,7 +334,7 @@ export default function GalleryPage() {
             }}
             variant="primary"
           >
-            🔍 Apply Filters
+            Apply Filters
           </Button>
           
           <Button
@@ -331,31 +352,41 @@ export default function GalleryPage() {
             }}
             variant="secondary"
           >
-            🗑️ Clear Filters
+            Clear Filters
           </Button>
           
           <Button
             onClick={() => setSelectMode(!selectMode)}
             variant={selectMode ? "warning" : "secondary"}
           >
-            {selectMode ? '❌ Cancel Selection' : '☑️ Select Mode'}
+            {selectMode ? 'Cancel Selection' : 'Select Mode'}
           </Button>
-          
+
           {selectMode && selectedImages.size > 0 && (
-            <Button
-              onClick={() => setShowDeleteModal(true)}
-              variant="danger"
-            >
-              🗑️ Delete Selected ({selectedImages.size})
-            </Button>
+            <>
+              <Button
+                onClick={downloadSelectedImages}
+                variant="primary"
+                isLoading={isDownloading}
+                disabled={isDownloading}
+              >
+                Download Selected ({selectedImages.size})
+              </Button>
+              <Button
+                onClick={() => setShowDeleteModal(true)}
+                variant="danger"
+              >
+                Delete Selected ({selectedImages.size})
+              </Button>
+            </>
           )}
         </div>
       </Card>
 
       {error && (
-        <Card style={{ marginBottom: '2rem', background: '#fee2e2' }}>
-          <div style={{ color: '#dc2626', textAlign: 'center' }}>
-            ⚠️ {error}
+        <Card className="mb-8 bg-red-50 border-red-200">
+          <div className="text-red-600 text-center">
+            {error}
           </div>
         </Card>
       )}
@@ -363,10 +394,10 @@ export default function GalleryPage() {
       {/* Images Grid */}
       <Card>
         {images.length === 0 && !loading ? (
-          <div style={{ textAlign: 'center', padding: '4rem' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📸</div>
-            <h3 style={{ color: '#6b7280', marginBottom: '1rem' }}>No photos found</h3>
-            <p style={{ color: '#9ca3af' }}>
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">📸</div>
+            <h3 className="text-gray-500 text-xl mb-4">No photos found</h3>
+            <p className="text-gray-400">
               {faceFilter ? 'No photos found with the selected face filter.' : 'Upload some photos to get started!'}
             </p>
           </div>
@@ -382,14 +413,7 @@ export default function GalleryPage() {
             
             {/* Pagination */}
             {totalPages > 1 && (
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                gap: '1rem',
-                marginTop: '2rem',
-                padding: '1rem 0'
-              }}>
+              <div className="flex justify-center items-center gap-4 mt-8 pt-4">
                 <Button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage <= 1}
@@ -399,7 +423,7 @@ export default function GalleryPage() {
                   ← Previous
                 </Button>
                 
-                <span style={{ color: '#6b7280' }}>
+                <span className="text-gray-500">
                   Page {currentPage} of {totalPages} ({totalCount} total photos)
                 </span>
                 
@@ -426,37 +450,31 @@ export default function GalleryPage() {
           setImageDetail(null);
           setCroppedFaces({});
         }}
-        title="📷 Photo Details"
+        title="Photo Details"
         size="xl"
       >
         {selectedImage && imageDetail && (
-          <div style={{ display: 'grid', gap: '2rem' }}>
+          <div className="grid gap-8">
             {/* Main Image */}
-            <div style={{ textAlign: 'center' }}>
+            <div className="text-center">
               <img
                 src={imageDetail.image.azure_blob_url}
                 alt="Selected"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '60vh',
-                  objectFit: 'contain',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                }}
+                className="max-w-full max-h-[60vh] object-contain rounded-xl shadow-lg mx-auto"
               />
             </div>
 
             {/* Image Info */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-              <Card style={{ background: '#f8faff' }}>
-                <h4 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>📊 Details</h4>
-                <p style={{ margin: '0 0 0.25rem 0', color: '#6b7280' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Card className="bg-blue-50">
+                <h4 className="text-gray-700 font-semibold mb-2">Details</h4>
+                <p className="text-gray-600 mb-1">
                   <strong>Faces:</strong> {imageDetail.image.faces}
                 </p>
-                <p style={{ margin: '0 0 0.25rem 0', color: '#6b7280' }}>
+                <p className="text-gray-600 mb-1">
                   <strong>Created:</strong> {formatDateTime(imageDetail.image.created_at)}
                 </p>
-                <p style={{ margin: 0, color: '#6b7280' }}>
+                <p className="text-gray-600">
                   <strong>Format:</strong> {imageDetail.image.file_extension?.toUpperCase()}
                 </p>
               </Card>
@@ -465,55 +483,26 @@ export default function GalleryPage() {
             {/* Detected Faces */}
             {imageDetail.faces && imageDetail.faces.length > 0 && (
               <Card>
-                <h4 style={{ marginBottom: '1rem', color: '#374151' }}>
-                  👥 Detected Faces ({imageDetail.faces.length})
+                <h4 className="text-gray-700 font-semibold mb-4">
+                  Detected Faces ({imageDetail.faces.length})
                 </h4>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
-                  gap: '1rem' 
-                }}>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {imageDetail.faces.map((face) => (
-                    <div key={face.face_id} style={{ textAlign: 'center' }}>
-                      <div
-                        style={{
-                          width: '100px',
-                          height: '100px',
-                          margin: '0 auto 0.5rem',
-                          borderRadius: '8px',
-                          overflow: 'hidden',
-                          border: '2px solid #e5e7eb',
-                          background: '#f9fafb'
-                        }}
-                      >
+                    <div key={face.face_id} className="text-center">
+                      <div className="w-24 h-24 mx-auto mb-2 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
                         {croppedFaces[face.face_id.toString()] ? (
                           <img
                             src={croppedFaces[face.face_id.toString()]}
                             alt={`Face ${face.face_id}`}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover'
-                            }}
+                            className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#9ca3af'
-                          }}>
+                          <div className="text-2xl text-gray-400">
                             👤
                           </div>
                         )}
                       </div>
-                      <p style={{ 
-                        margin: 0, 
-                        fontSize: '0.8rem', 
-                        color: '#6b7280' 
-                      }}>
+                      <p className="text-xs text-gray-600">
                         Face {face.face_id}
                         {face.cluster_id >= 0 && (
                           <><br />Cluster {face.cluster_id}</>
@@ -535,26 +524,20 @@ export default function GalleryPage() {
           setShowDeleteModal(false);
           setAdminPassword('');
         }}
-        title="🗑️ Delete Selected Photos"
+        title="Delete Selected Photos"
         size="md"
       >
-        <div style={{ display: 'grid', gap: '1.5rem' }}>
-          <div style={{ 
-            background: '#fee2e2', 
-            color: '#dc2626', 
-            padding: '1rem', 
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
+        <div className="grid gap-6">
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg text-center">
             ⚠️ Warning: This action cannot be undone!
           </div>
           
-          <p style={{ textAlign: 'center', color: '#374151' }}>
+          <p className="text-center text-gray-700">
             You are about to delete <strong>{selectedImages.size}</strong> selected photos.
           </p>
           
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#374151' }}>
+            <label className="block mb-2 font-semibold text-gray-700">
               Admin Password *
             </label>
             <input
@@ -562,24 +545,18 @@ export default function GalleryPage() {
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               placeholder="Enter admin password"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e5e7eb',
-                borderRadius: '8px',
-                fontSize: '1rem'
-              }}
+              className="w-full p-3 border-2 border-gray-200 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div className="flex gap-4">
             <Button
               onClick={() => {
                 setShowDeleteModal(false);
                 setAdminPassword('');
               }}
               variant="secondary"
-              style={{ flex: 1 }}
+              className="flex-1"
             >
               Cancel
             </Button>
@@ -588,7 +565,7 @@ export default function GalleryPage() {
               isLoading={loading}
               disabled={!adminPassword}
               variant="danger"
-              style={{ flex: 1 }}
+              className="flex-1"
             >
               Delete Photos
             </Button>

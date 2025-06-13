@@ -219,10 +219,10 @@ export default function PeoplePage() {
 
   if (!eventCode) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <div className="p-8 text-center">
         <Card padding="lg">
-          <h2 style={{ color: '#e74c3c', marginBottom: '1rem' }}>No Event Selected</h2>
-          <p style={{ color: '#666', fontSize: '1.1rem' }}>
+          <h2 className="text-red-500 text-xl font-semibold mb-4">No Event Selected</h2>
+          <p className="text-gray-600 text-lg">
             Please select an event from the header dropdown to view people.
           </p>
         </Card>
@@ -235,65 +235,50 @@ export default function PeoplePage() {
   }
 
   return (
-    <div style={{ 
-      padding: '2rem', 
-      maxWidth: '1400px', 
-      margin: '0 auto',
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      minHeight: '100vh'
-    }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ 
-          textAlign: 'center', 
-          marginBottom: '1rem',
-          color: '#2c3e50',
-          fontSize: '2.5rem'
-        }}>
-          👥 People Recognition
+    <div className="p-8 max-w-7xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-center text-4xl font-bold text-gray-800 mb-4">
+          People Recognition
         </h1>
-        <p style={{ 
-          textAlign: 'center', 
-          color: '#666', 
-          fontSize: '1.1rem' 
-        }}>
+        <p className="text-center text-gray-600 text-lg">
           AI-detected people from <strong>{eventCode}</strong>
         </p>
       </div>
 
       {clusters.length === 0 ? (
-        <Card padding="lg" style={{ textAlign: 'center' }}>
-          <div style={{ padding: '3rem' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🤖</div>
-            <h2 style={{ color: '#6b7280', marginBottom: '1rem' }}>No People Detected Yet</h2>
-            <p style={{ color: '#9ca3af', marginBottom: '2rem', fontSize: '1.1rem' }}>
+        <Card padding="lg" className="text-center">
+          <div className="py-12">
+            <div className="text-6xl mb-4">🤖</div>
+            <h2 className="text-gray-500 text-xl mb-4">No People Detected Yet</h2>
+            <p className="text-gray-400 mb-8 text-lg">
               Upload some photos with people to see AI face recognition in action
             </p>
             <Button onClick={() => window.location.href = '/gallery/upload'} size="lg">
-              📸 Upload Photos
+              Upload Photos
             </Button>
           </div>
         </Card>
       ) : (
         <>
           {/* Controls */}
-          <Card style={{ marginBottom: '2rem' }} padding="lg">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <Card className="mb-8" padding="lg">
+            <div className="flex justify-between items-center flex-wrap gap-4">
               <div>
-                <h3 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>
+                <h3 className="text-gray-700 font-semibold mb-2">
                   Found {clusters.length} people ({selectedClusters.size} selected)
                 </h3>
-                <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>
+                <p className="text-gray-600 text-sm">
                   Click on people to select them, then view their photos
                 </p>
               </div>
               
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <div className="flex gap-3">
                 <Button
                   onClick={handleSelectAll}
                   variant="secondary"
                   size="sm"
                 >
-                  {selectedClusters.size === clusters.length ? '❌ Deselect All' : '☑️ Select All'}
+                  {selectedClusters.size === clusters.length ? 'Deselect All' : 'Select All'}
                 </Button>
                 
                 <Button
@@ -301,7 +286,7 @@ export default function PeoplePage() {
                   variant="secondary"
                   size="sm"
                 >
-                  🔄 Refresh
+                  Refresh
                 </Button>
                 
                 {selectedClusters.size > 0 && (
@@ -309,7 +294,7 @@ export default function PeoplePage() {
                     onClick={handleViewPhotos}
                     variant="primary"
                   >
-                    🖼️ View Photos ({selectedClusters.size} people)
+                    View Photos ({selectedClusters.size} people)
                   </Button>
                 )}
               </div>
@@ -317,11 +302,7 @@ export default function PeoplePage() {
           </Card>
 
           {/* People Grid */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-            gap: '1.5rem' 
-          }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {clusters.map((cluster) => {
               const currentSampleIndex = faceStates[cluster.cluster_id] || 0;
               const currentSample = cluster.samples[currentSampleIndex];
@@ -333,83 +314,47 @@ export default function PeoplePage() {
                 <Card
                   key={cluster.cluster_id}
                   hoverable
-                  style={{
-                    cursor: 'pointer',
-                    border: isSelected ? '3px solid #667eea' : '1px solid #e5e7eb',
-                    background: isSelected ? '#f8faff' : '#fff',
-                    transition: 'all 0.3s ease'
-                  }}
+                  className={`cursor-pointer transition-all duration-300 relative ${
+                    isSelected 
+                      ? 'border-2 border-indigo-500 bg-indigo-50' 
+                      : 'border border-gray-200 bg-white hover:shadow-lg'
+                  }`}
                   onClick={() => handleClusterClick(cluster.cluster_id)}
                 >
-                  <div style={{ textAlign: 'center', padding: '1rem' }}>
+                  <div className="text-center p-4">
                     {/* Face Display */}
-                    <div style={{ 
-                      width: '120px', 
-                      height: '120px', 
-                      margin: '0 auto 1rem',
-                      borderRadius: '50%',
-                      overflow: 'hidden',
-                      border: '3px solid #e5e7eb',
-                      background: '#f9fafb',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
+                    <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 flex items-center justify-center">
                       {croppedFace ? (
                         <img
                           src={croppedFace}
                           alt={`Person ${cluster.cluster_id}`}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
+                          className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div style={{
-                          fontSize: '3rem',
-                          color: '#9ca3af'
-                        }}>
+                        <div className="text-5xl text-gray-400">
                           👤
                         </div>
                       )}
                     </div>
 
                     {/* Info */}
-                    <h3 style={{ 
-                      margin: '0 0 0.5rem 0', 
-                      color: '#1f2937',
-                      fontSize: '1.1rem'
-                    }}>
+                    <h3 className="text-gray-800 font-semibold text-lg mb-2">
                       Person {cluster.cluster_id}
                     </h3>
                     
-                    <p style={{ 
-                      margin: '0 0 0.5rem 0', 
-                      color: '#6b7280',
-                      fontSize: '0.9rem'
-                    }}>
+                    <p className="text-gray-600 text-sm mb-2">
                       {cluster.face_count} photo{cluster.face_count !== 1 ? 's' : ''}
                     </p>
 
                     {/* Sample indicator */}
                     {cluster.samples.length > 1 && (
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        gap: '4px',
-                        marginTop: '0.5rem'
-                      }}>
+                      <div className="flex justify-center gap-1 mt-2">
                         {cluster.samples.slice(0, NUM_CLUSTER_SAMPLES).map((_, index) => (
                           <div
                             key={index}
-                            style={{
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              background: index === currentSampleIndex ? '#667eea' : '#d1d5db',
-                              transition: 'background 0.3s ease'
-                            }}
+                            className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                              index === currentSampleIndex ? 'bg-indigo-500' : 'bg-gray-300'
+                            }`}
                           />
                         ))}
                       </div>
@@ -417,20 +362,7 @@ export default function PeoplePage() {
 
                     {/* Selection indicator */}
                     {isSelected && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        background: '#667eea',
-                        color: '#fff',
-                        borderRadius: '50%',
-                        width: '24px',
-                        height: '24px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.75rem'
-                      }}>
+                      <div className="absolute top-4 right-4 bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
                         ✓
                       </div>
                     )}

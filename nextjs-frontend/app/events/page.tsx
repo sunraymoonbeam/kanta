@@ -624,8 +624,165 @@ export default function EventsPage() {
         )}
       </Modal>
 
-      {/* Edit and Delete modals would go here - similar structure but abbreviated for space */}
-      {/* ... */}
+      {/* Edit Modal */}
+      <Modal
+        isOpen={modalType === 'edit'}
+        onClose={closeModal}
+        title="Edit Event"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Event Code *
+            </label>
+            <input
+              type="text"
+              value={form.code}
+              disabled
+              className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
+            <p className="text-xs text-gray-500 mt-1">Event code cannot be changed</p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Event Name *
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="e.g., Sarah & John's Wedding"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Tell us about your event..."
+              rows={3}
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors resize-vertical"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Start Date & Time
+              </label>
+              <input
+                type="datetime-local"
+                value={form.start}
+                onChange={(e) => setForm({ ...form, start: e.target.value })}
+                className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                End Date & Time
+              </label>
+              <input
+                type="datetime-local"
+                value={form.end}
+                onChange={(e) => setForm({ ...form, end: e.target.value })}
+                className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3 pt-4">
+            <Button
+              onClick={closeModal}
+              variant="secondary"
+              style={{ flex: 1 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdate}
+              isLoading={submitting}
+              disabled={!form.code || !form.name}
+              variant="primary"
+              style={{ flex: 1 }}
+            >
+              Update Event
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal
+        isOpen={modalType === 'delete'}
+        onClose={closeModal}
+        title="Delete Event"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+            <div className="text-red-600 text-lg font-semibold mb-2">
+              Are you absolutely sure?
+            </div>
+            <p className="text-red-700">
+              This action cannot be undone. This will permanently delete the event
+              <strong> "{selectedEvent?.name}" </strong>
+              and all associated images.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Administrator Password *
+            </label>
+            <input
+              type="password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              placeholder="Enter admin password"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Type event code to confirm: <strong>{selectedEvent?.code}</strong>
+            </label>
+            <input
+              type="text"
+              value={eventCodeConfirmation}
+              onChange={(e) => setEventCodeConfirmation(e.target.value)}
+              placeholder={selectedEvent?.code || ''}
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none transition-colors"
+            />
+          </div>
+          
+          <div className="flex gap-3 pt-4">
+            <Button
+              onClick={closeModal}
+              variant="secondary"
+              style={{ flex: 1 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => selectedEvent && handleDelete(selectedEvent.code)}
+              isLoading={submitting}
+              disabled={!adminPassword || !eventCodeConfirmation}
+              variant="danger"
+              style={{ flex: 1 }}
+            >
+              Delete Forever
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
