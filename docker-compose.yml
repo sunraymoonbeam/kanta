@@ -27,8 +27,8 @@ services:
           path: ./backend/src/app
           target: /app/src/app
 
-  frontend:
-    image: kanta.azurecr.io/frontend:latest
+  streamlit-frontend:
+    image: kanta.azurecr.io/streamlit-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -57,6 +57,22 @@ services:
         - action: sync
           path: ./frontend/utils
           target: /app/utils
+
+  nextjs-frontend:
+    image: kanta.azurecr.io/nextjs-frontend:latest
+    build:
+      context: ./nextjs
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    command: ["npm", "run", "start"]
+    ports:
+      - 3000:3000
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8000/api/v1
+    depends_on:
+      backend:
+        condition: service_healthy
+        restart: true
 
 networks:
   default:
