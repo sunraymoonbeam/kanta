@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getImages, getImageDetail, deleteImage, Image, ImagesParams } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 import { cropAndEncodeFace, BoundingBox } from '../../utils/imageCrop';
@@ -72,7 +72,27 @@ function GalleryPage() {
   const [adminPassword, setAdminPassword] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
-  const [faceFilter, setFaceFilter] = useState<number | null>(null);
+  const [faceFilter, setFaceFilter] = useState<number[] | null>(null);
+  
+  // Add URL search params handling
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
+  
+  // Initialize search params on client side only
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setSearchParams(params);
+      
+      // Check for face filter from URL params
+      const faceFilterParam = params.get('faceFilter');
+      if (faceFilterParam) {
+        const clusterIds = faceFilterParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+        if (clusterIds.length > 0) {
+          setFaceFilter(clusterIds);
+        }
+      }
+    }
+  }, []);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -101,7 +121,7 @@ function GalleryPage() {
       if (filters.endDate) params.date_to = filters.endDate;
       if (filters.minFaces) params.min_faces = parseInt(filters.minFaces);
       if (filters.maxFaces) params.max_faces = parseInt(filters.maxFaces);
-      if (faceFilter !== null) params.cluster_list_id = [faceFilter];
+      if (faceFilter !== null) params.cluster_list_id = faceFilter;
       
       const response = await getImages(params);
       setImages(response.images);
@@ -359,7 +379,8 @@ function GalleryPage() {
                 borderRadius: '4px'
               }}
             >
-              <option value={25}>25</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
@@ -377,7 +398,7 @@ function GalleryPage() {
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <span>Filtering by face cluster: {faceFilter}</span>
+            <span>Filtering by people: {faceFilter.join(', ')}</span>
             <button
               onClick={clearFaceFilter}
               style={{
@@ -624,12 +645,12 @@ function GalleryPage() {
                     {imageDetail.face_details.map((face) => (
                       <div 
                         key={face.uuid}
-                        onClick={() => setFaceFilter(face.cluster_id)}
+                        onClick={() => setFaceFilter([face.cluster_id])}
                         style={{
                           textAlign: 'center',
                           cursor: 'pointer',
                           padding: '0.5rem',
-                          border: faceFilter === face.cluster_id ? '2px solid #007bff' : '1px solid #ddd',
+                          border: faceFilter?.includes(face.cluster_id) ? '2px solid #007bff' : '1px solid #ddd',
                           borderRadius: '8px',
                           transition: 'all 0.3s ease'
                         }}

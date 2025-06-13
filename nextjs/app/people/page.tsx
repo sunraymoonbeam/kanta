@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getClusters, Cluster } from '../../lib/api';
 import { useEvents } from '../../components/EventContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -21,16 +21,16 @@ export default function PeoplePage() {
   const [selectedClusters, setSelectedClusters] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [faceStates, setFaceStates] = useState<CyclingFaceState>({});
-  const [faceFilter, setFaceFilter] = useState<number | null>(null);
+  const [faceFilter, setFaceFilter] = useState<number[] | null>(null);
   const [croppedFaces, setCroppedFaces] = useState<{ [key: string]: string }>({});
 
   // Check for face filter from URL params
   useEffect(() => {
     const faceFilterParam = searchParams.get('faceFilter');
     if (faceFilterParam) {
-      const clusterId = parseInt(faceFilterParam);
-      if (!isNaN(clusterId)) {
-        setFaceFilter(clusterId);
+      const clusterIds = faceFilterParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      if (clusterIds.length > 0) {
+        setFaceFilter(clusterIds);
       }
     }
   }, [searchParams]);
@@ -122,9 +122,11 @@ export default function PeoplePage() {
   const clearFaceFilter = () => {
     setFaceFilter(null);
     // Remove faceFilter from URL
-    const newUrl = new URL(window.location.href);
-    newUrl.searchParams.delete('faceFilter');
-    window.history.replaceState({}, '', newUrl.toString());
+    if (typeof window !== 'undefined') {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('faceFilter');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
   };
 
   const getClusterTitle = (cluster: Cluster) => {
@@ -270,7 +272,7 @@ export default function PeoplePage() {
               gap: '1rem'
             }}>
               <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
-                Filtering by Person {faceFilter}
+                Filtering by People: {faceFilter.join(', ')}
               </span>
               <button
                 onClick={clearFaceFilter}
@@ -340,7 +342,7 @@ export default function PeoplePage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
               gap: '2rem' 
             }}>
-              {clusters.filter(cluster => faceFilter === null || cluster.cluster_id === faceFilter).map((cluster) => {
+              {clusters.filter(cluster => faceFilter === null || faceFilter.includes(cluster.cluster_id)).map((cluster) => {
                 const isSelectable = cluster.cluster_id >= 0;
                 const isSelected = selectedClusters.has(cluster.cluster_id);
                 const currentSampleIndex = faceStates[cluster.cluster_id] || 0;
