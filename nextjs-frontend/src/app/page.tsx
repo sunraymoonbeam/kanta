@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { effects } from '../config/kanta.config';
 import styles from './HomePage.module.css';
 
 const steps = [
@@ -77,8 +78,28 @@ export default function HomePage() {
     <div className={styles.hero}>
       {/* Background Effects */}
       <div className={styles.heroEffects}>
-        <div className={styles.gradientOrb} />
-        <div className={styles.dots} />
+        {effects.gradient.display && (
+          <div 
+            className={styles.gradientOrb}
+            style={{
+              opacity: Number(effects.gradient.opacity) / 100,
+              left: `${effects.gradient.x}%`,
+              top: `${effects.gradient.y}%`,
+              width: `${effects.gradient.width}%`,
+              height: `${effects.gradient.height}%`,
+              transform: `rotate(${effects.gradient.tilt}deg)`
+            }}
+          />
+        )}
+        {effects.dots.display && (
+          <div 
+            className={styles.dots}
+            style={{
+              opacity: Number(effects.dots.opacity) / 100,
+              backgroundSize: `${Number(effects.dots.size) * 10}px ${Number(effects.dots.size) * 10}px`
+            }}
+          />
+        )}
       </div>
 
       <motion.div 

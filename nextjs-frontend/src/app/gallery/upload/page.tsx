@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { uploadImage } from '../../../lib/api';
 import { useEvents } from '../../../hooks/useEvents';
 import Button from '../../../components/ui/Button';
@@ -7,6 +8,8 @@ import Card from '../../../components/ui/Card';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import { CapturedShot, ImageFilter } from '../../../types/images';
 import { IMAGE_FILTERS, MAX_DISPOSABLE_SHOTS, FILM_STRIP_ROWS, FILM_STRIP_COLS } from '../../../lib/constants';
+import { effects } from '../../../config/kanta.config';
+import styles from './UploadPage.module.css';
 
 export default function UploadPage() {
   const { selected: eventCode } = useEvents();
@@ -48,37 +51,59 @@ export default function UploadPage() {
   const shotsUsed = pendingShots.length + uploadedShots.length;
   const shotsLeft = MAX_DISPOSABLE_SHOTS - shotsUsed;
 
+  // Device upload handlers
+  const handleDeviceFiles = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setDeviceFiles(files);
+      
+      const previews = files.map(file => URL.createObjectURL(file));
+      setDevicePreviews(prev => {
+        prev.forEach(url => URL.revokeObjectURL(url));
+        return previews;
+      });
+    }
+  }, []);
+
+  const uploadDeviceFiles = useCallback(async () => {
+    if (!eventCode || deviceFiles.length === 0) return;
+    
+    setDeviceUploading(true);
+    try {
+      const uploadPromises = deviceFiles.map(file => uploadImage(eventCode, file));
+      await Promise.all(uploadPromises);
+      
+      setDeviceFiles([]);
+      setDevicePreviews(prev => {
+        prev.forEach(url => URL.revokeObjectURL(url));
+        return [];
+      });
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setDeviceUploading(false);
+    }
+  }, [eventCode, deviceFiles]);
+
+  // Camera handlers
   const startCamera = useCallback(async () => {
     try {
       setCameraError('');
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'environment'
-        }
+        video: { facingMode: 'environment' }
       });
       setCameraStream(stream);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.muted = true;
-        videoRef.current.playsInline = true;
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.error('Error playing video:', e);
-          });
-        }
       }
-    } catch (error: any) {
-      console.error('Error accessing camera:', error);
-      const errorMessage = error.name === 'NotAllowedError' 
-        ? 'Camera access denied. Please allow camera permissions and try again.'
-        : error.name === 'NotFoundError'
-        ? 'No camera found on this device.'
-        : 'Could not access camera. Please check permissions and try again.';
-      setCameraError(errorMessage);
-      alert(errorMessage);
+    } catch (error) {
+      setCameraError('Unable to access camera. Please check permissions.');
+      console.error('Camera error:', error);
     }
   }, []);
 
@@ -86,423 +111,364 @@ export default function UploadPage() {
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
       setCameraStream(null);
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
     }
   }, [cameraStream]);
 
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current || shotsLeft <= 0) return;
-
+    
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
+    const context = canvas.getContext('2d');
+    
+    if (!context) return;
+    
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
-    ctx.filter = filterStyle[filter];
-    ctx.drawImage(video, 0, 0);
-
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-
-      const file = new File([blob], `capture-${Date.now()}.png`, { type: 'image/png' });
-      const dataUrl = canvas.toDataURL('image/png');
-      
-      const shot: CapturedShot = {
-        id: Date.now().toString(),
-        dataUrl,
-        file,
-        filter,
-        timestamp: Date.now(),
-      };
-
-      setPendingShots(prev => [...prev, shot]);
-    }, 'image/png');
+    
+    context.save();
+    if (filter !== 'Normal') {
+      context.filter = filterStyle[filter];
+    }
+    context.drawImage(video, 0, 0);
+    context.restore();
+    
+    canvas.toBlob(blob => {
+      if (blob) {
+        const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+        const newShot: CapturedShot = {
+          id: Date.now().toString(),
+          dataUrl: canvas.toDataURL('image/jpeg', 0.9),
+          file,
+          filter,
+          timestamp: Date.now()
+        };
+        setPendingShots(prev => [...prev, newShot]);
+      }
+    }, 'image/jpeg', 0.9);
   }, [filter, filterStyle, shotsLeft]);
 
-  const handleDeviceFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    setDeviceFiles(files);
-    
-    // Generate previews
-    Promise.all(
-      files.map(file => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(file);
-        });
-      })
-    ).then(setDevicePreviews);
-  };
-
-  const uploadDeviceFiles = async () => {
-    if (!eventCode || deviceFiles.length === 0) return;
-
-    setDeviceUploading(true);
-    try {
-      for (const file of deviceFiles) {
-        await uploadImage(eventCode, file);
-      }
-      alert(`Successfully uploaded ${deviceFiles.length} photos!`);
-      setDeviceFiles([]);
-      setDevicePreviews([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error: any) {
-      console.error('Upload failed:', error);
-      alert(`Upload failed: ${error.response?.data?.detail || error.message}`);
-    } finally {
-      setDeviceUploading(false);
-    }
-  };
-
-  const uploadSelectedShots = async () => {
-    if (!eventCode || selectedShots.size === 0) return;
-
-    setIsUploading(true);
-    setUploadProgress({});
-
-    const shotsToUpload = pendingShots.filter(shot => selectedShots.has(shot.id));
-
-    try {
-      for (let i = 0; i < shotsToUpload.length; i++) {
-        const shot = shotsToUpload[i];
-        setUploadProgress(prev => ({ ...prev, [shot.id]: 0 }));
-        
-        await uploadImage(eventCode, shot.file);
-        
-        setUploadProgress(prev => ({ ...prev, [shot.id]: 100 }));
-        setTotalProgress(((i + 1) / shotsToUpload.length) * 100);
-      }
-
-      // Move uploaded shots
-      setUploadedShots(prev => [...prev, ...shotsToUpload]);
-      setPendingShots(prev => prev.filter(shot => !selectedShots.has(shot.id)));
-      setSelectedShots(new Set());
-      
-      alert(`Successfully uploaded ${shotsToUpload.length} photos!`);
-    } catch (error: any) {
-      console.error('Upload failed:', error);
-      alert(`Upload failed: ${error.response?.data?.detail || error.message}`);
-    } finally {
-      setIsUploading(false);
-      setUploadProgress({});
-      setTotalProgress(0);
-    }
-  };
-
-  const toggleShotSelection = (shotId: string) => {
+  // Film strip handlers
+  const toggleShotSelection = useCallback((shotId: string) => {
     setSelectedShots(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(shotId)) {
-        newSet.delete(shotId);
+      const newSelection = new Set(prev);
+      if (newSelection.has(shotId)) {
+        newSelection.delete(shotId);
       } else {
-        newSet.add(shotId);
+        newSelection.add(shotId);
       }
-      return newSet;
+      return newSelection;
     });
-  };
+  }, []);
 
-  const clearFilmStrip = () => {
+  const clearFilmStrip = useCallback(() => {
     setPendingShots([]);
     setUploadedShots([]);
     setSelectedShots(new Set());
-  };
+    setUploadProgress({});
+    setTotalProgress(0);
+  }, []);
 
-  if (!eventCode) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <Card padding="lg">
-          <h2 style={{ color: '#e74c3c', marginBottom: '1rem' }}>No Event Selected</h2>
-          <p style={{ color: '#666', fontSize: '1.1rem' }}>
-            Please select an event from the header dropdown before uploading photos.
-          </p>
-        </Card>
-      </div>
-    );
-  }
+  const uploadSelectedShots = useCallback(async () => {
+    if (!eventCode || selectedShots.size === 0) return;
+    
+    setIsUploading(true);
+    const shotsToUpload = pendingShots.filter(shot => selectedShots.has(shot.id));
+    
+    try {
+      for (const shot of shotsToUpload) {
+        setUploadProgress(prev => ({ ...prev, [shot.id]: 0 }));
+        
+        // Use the file directly from the shot
+        await uploadImage(eventCode, shot.file);
+        
+        setUploadProgress(prev => ({ ...prev, [shot.id]: 100 }));
+        setUploadedShots(prev => [...prev, shot]);
+        setPendingShots(prev => prev.filter(s => s.id !== shot.id));
+      }
+      
+      setSelectedShots(new Set());
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [eventCode, selectedShots, pendingShots]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      devicePreviews.forEach(url => URL.revokeObjectURL(url));
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [devicePreviews, cameraStream]);
+
+  // Calculate total progress
+  useEffect(() => {
+    if (Object.keys(uploadProgress).length > 0) {
+      const total = Object.values(uploadProgress).reduce((sum, progress) => sum + progress, 0);
+      setTotalProgress(total / Object.keys(uploadProgress).length);
+    }
+  }, [uploadProgress]);
 
   return (
-    <div style={{ 
-      padding: '2rem', 
-      maxWidth: '1200px', 
-      margin: '0 auto',
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      minHeight: '100vh'
-    }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ 
-          textAlign: 'center', 
-          marginBottom: '1rem',
-          color: '#2c3e50',
-          fontSize: '2.5rem'
-        }}>
-          📸 Upload Photos
-        </h1>
-        <p style={{ 
-          textAlign: 'center', 
-          color: '#666', 
-          fontSize: '1.1rem' 
-        }}>
-          Upload photos to <strong>{eventCode}</strong> using your device or camera
-        </p>
-      </div>
-
-      {/* Device Upload Section */}
-      <Card style={{ marginBottom: '2rem' }} padding="lg">
-        <h2 style={{ color: '#2c3e50', marginBottom: '1rem' }}>📱 Upload from Device</h2>
-        
-        <div style={{ marginBottom: '1rem' }}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleDeviceFileSelect}
+    <div className={styles.container}>
+      {/* Background Effects */}
+      <div className={styles.effects}>
+        {effects.dots.display && (
+          <div
+            className={styles.effect}
             style={{
-              width: '100%',
-              padding: '1rem',
-              border: '2px dashed #ddd',
-              borderRadius: '8px',
-              cursor: 'pointer'
+              background: `radial-gradient(circle, var(--brand-background-medium) 1px, transparent 1px)`,
+              backgroundSize: '20px 20px',
+              opacity: effects.dots.opacity / 100
             }}
           />
-        </div>
+        )}
+        {effects.gradient.display && (
+          <div
+            className={styles.effect}
+            style={{
+              background: `linear-gradient(${effects.gradient.tilt}deg, var(--${effects.gradient.colorStart}), var(--${effects.gradient.colorEnd}))`,
+              opacity: effects.gradient.opacity / 100
+            }}
+          />
+        )}
+      </div>
 
-        {devicePreviews.length > 0 && (
-          <div style={{ marginBottom: '1rem' }}>
-            <h3 style={{ marginBottom: '0.5rem' }}>Selected Files ({deviceFiles.length})</h3>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
-              gap: '0.5rem',
-              marginBottom: '1rem'
-            }}>
-              {devicePreviews.map((preview, index) => (
-                <img
-                  key={index}
-                  src={preview}
-                  alt={`Preview ${index + 1}`}
-                  style={{
-                    width: '100%',
-                    height: '120px',
-                    objectFit: 'cover',
-                    borderRadius: '8px',
-                    border: '1px solid #ddd'
-                  }}
-                />
-              ))}
-            </div>
+      <div className={styles.content}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className={styles.header}
+        >
+          <h1 className={styles.title}>📸 Upload Photos</h1>
+          <p className={styles.subtitle}>
+            Share your memories from the event
+          </p>
+        </motion.div>
+
+        {/* Device Upload Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <Card padding="lg" className={styles.uploadCard}>
+            <h2 className={styles.sectionTitle}>📱 Upload from Device</h2>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleDeviceFiles}
+              className={styles.fileInput}
+            />
             
             <Button
-              onClick={uploadDeviceFiles}
-              isLoading={deviceUploading}
-              disabled={deviceFiles.length === 0}
-              variant="primary"
+              onClick={() => fileInputRef.current?.click()}
+              variant="secondary"
+              size="lg"
+              className={styles.selectButton}
             >
-              {deviceUploading ? 'Uploading...' : `Upload ${deviceFiles.length} Photos`}
+              📁 Select Photos
             </Button>
-          </div>
-        )}
-      </Card>
 
-      {/* Camera Section */}
-      <Card padding="lg">
-        <h2 style={{ color: '#2c3e50', marginBottom: '1rem' }}>📷 Camera Capture</h2>
-        
-        {/* Camera Controls */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-          {!cameraStream ? (
-            <Button onClick={startCamera} variant="primary">
-              Start Camera
-            </Button>
-          ) : (
-            <Button onClick={stopCamera} variant="secondary">
-              Stop Camera
-            </Button>
-          )}
-          
-          {cameraStream && (
-            <>
-              <Button 
-                onClick={capturePhoto}
-                disabled={shotsLeft <= 0}
-                variant="success"
+            {deviceFiles.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className={styles.previewSection}
               >
-                📸 Capture ({shotsLeft} left)
-              </Button>
-              
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as ImageFilter)}
-                style={{
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd'
-                }}
-              >
-                {IMAGE_FILTERS.map(f => (
-                  <option key={f} value={f}>{f}</option>
-                ))}
-              </select>
-            </>
-          )}
-        </div>
-
-        {/* Camera Preview */}
-        {cameraStream && (
-          <div style={{ marginBottom: '1rem' }}>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{
-                width: '100%',
-                maxWidth: '500px',
-                height: 'auto',
-                borderRadius: '8px',
-                filter: filterStyle[filter]
-              }}
-            />
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
-          </div>
-        )}
-
-        {/* Error Display */}
-        {cameraError && (
-          <div style={{ 
-            background: '#fee', 
-            color: '#c33', 
-            padding: '1rem', 
-            borderRadius: '8px',
-            marginBottom: '1rem'
-          }}>
-            {cameraError}
-          </div>
-        )}
-
-        {/* Film Strip */}
-        {(pendingShots.length > 0 || uploadedShots.length > 0) && (
-          <div style={{ marginTop: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3>Film Strip ({shotsUsed}/{MAX_DISPOSABLE_SHOTS})</h3>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {selectedShots.size > 0 && (
-                  <Button
-                    onClick={uploadSelectedShots}
-                    isLoading={isUploading}
-                    variant="primary"
-                  >
-                    Upload Selected ({selectedShots.size})
-                  </Button>
-                )}
-                <Button onClick={clearFilmStrip} variant="danger" size="sm">
-                  Clear All
+                <h3 className={styles.previewTitle}>
+                  Selected Files ({deviceFiles.length})
+                </h3>
+                
+                <div className={styles.previewGrid}>
+                  <AnimatePresence>
+                    {devicePreviews.map((preview, index) => (
+                      <motion.img
+                        key={index}
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className={styles.previewImage}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ delay: index * 0.1 }}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+                
+                <Button
+                  onClick={uploadDeviceFiles}
+                  isLoading={deviceUploading}
+                  disabled={deviceFiles.length === 0}
+                  variant="primary"
+                  size="lg"
+                  className={styles.uploadButton}
+                >
+                  🚀 Upload {deviceFiles.length} Photo{deviceFiles.length !== 1 ? 's' : ''}
                 </Button>
+              </motion.div>
+            )}
+          </Card>
+        </motion.div>
+
+        {/* Camera Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Card padding="lg" className={styles.cameraCard}>
+            <h2 className={styles.sectionTitle}>📷 Camera Capture</h2>
+            
+            {/* Camera Controls */}
+            <div className={styles.cameraControls}>
+              {!cameraStream ? (
+                <Button onClick={startCamera} variant="primary" size="lg">
+                  📹 Start Camera
+                </Button>
+              ) : (
+                <Button onClick={stopCamera} variant="secondary" size="lg">
+                  ⏹ Stop Camera
+                </Button>
+              )}
+
+              {/* Filter Selection */}
+              <div className={styles.filterSection}>
+                <label className={styles.filterLabel}>Filter:</label>
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value as ImageFilter)}
+                  className={styles.filterSelect}
+                >
+                  {IMAGE_FILTERS.map(f => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* Progress Bar */}
-            {isUploading && (
-              <div style={{ marginBottom: '1rem' }}>
-                <div style={{ 
-                  background: '#e0e0e0', 
-                  borderRadius: '4px', 
-                  height: '8px',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{ 
-                    background: '#667eea', 
-                    height: '100%', 
-                    width: `${totalProgress}%`,
-                    transition: 'width 0.3s ease'
-                  }} />
-                </div>
-                <p style={{ textAlign: 'center', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  Uploading... {Math.round(totalProgress)}%
-                </p>
+            {/* Camera Error */}
+            {cameraError && (
+              <div className={styles.error}>
+                ⚠️ {cameraError}
               </div>
             )}
 
-            {/* Film Strip Grid */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: `repeat(${FILM_STRIP_COLS}, 1fr)`, 
-              gap: '0.5rem',
-              maxHeight: `${FILM_STRIP_ROWS * 120 + (FILM_STRIP_ROWS - 1) * 8}px`,
-              overflow: 'hidden'
-            }}>
-              {[...pendingShots, ...uploadedShots].slice(0, MAX_DISPOSABLE_SHOTS).map((shot) => (
-                <div
-                  key={shot.id}
-                  onClick={() => !uploadedShots.some(u => u.id === shot.id) && toggleShotSelection(shot.id)}
-                  style={{
-                    position: 'relative',
-                    aspectRatio: '1',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    cursor: uploadedShots.some(u => u.id === shot.id) ? 'default' : 'pointer',
-                    border: selectedShots.has(shot.id) ? '3px solid #667eea' : '1px solid #ddd',
-                    opacity: uploadedShots.some(u => u.id === shot.id) ? 0.7 : 1
-                  }}
-                >
-                  <img
-                    src={shot.dataUrl}
-                    alt={`Shot ${shot.id}`}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                  
-                  {uploadedShots.some(u => u.id === shot.id) && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      background: 'rgba(0,0,0,0.8)',
-                      color: '#fff',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem'
-                    }}>
-                      ✓ Uploaded
-                    </div>
-                  )}
-                  
-                  {selectedShots.has(shot.id) && !uploadedShots.some(u => u.id === shot.id) && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px',
-                      background: '#667eea',
-                      color: '#fff',
-                      borderRadius: '50%',
-                      width: '24px',
-                      height: '24px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.75rem'
-                    }}>
-                      ✓
-                    </div>
-                  )}
+            {/* Camera View */}
+            {cameraStream && (
+              <div className={styles.cameraView}>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={styles.video}
+                  style={{ filter: filterStyle[filter] }}
+                />
+                
+                <canvas
+                  ref={canvasRef}
+                  className={styles.canvas}
+                />
+                
+                <div className={styles.captureControls}>
+                  <Button
+                    onClick={capturePhoto}
+                    disabled={shotsLeft <= 0}
+                    variant="primary"
+                    size="lg"
+                    className={styles.captureButton}
+                  >
+                    📸 Capture ({shotsLeft} left)
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </Card>
+              </div>
+            )}
+
+            {/* Film Strip */}
+            {(pendingShots.length > 0 || uploadedShots.length > 0) && (
+              <div className={styles.filmStrip}>
+                <div className={styles.filmStripHeader}>
+                  <h3 className={styles.filmStripTitle}>
+                    🎞️ Film Strip ({shotsUsed}/{MAX_DISPOSABLE_SHOTS})
+                  </h3>
+                  <div className={styles.filmStripControls}>
+                    <Button
+                      onClick={uploadSelectedShots}
+                      disabled={selectedShots.size === 0 || isUploading}
+                      isLoading={isUploading}
+                      variant="primary"
+                    >
+                      📤 Upload Selected ({selectedShots.size})
+                    </Button>
+                    <Button
+                      onClick={clearFilmStrip}
+                      disabled={isUploading}
+                      variant="secondary"
+                    >
+                      🗑️ Clear All
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                {isUploading && (
+                  <div className={styles.progressBar}>
+                    <div 
+                      className={styles.progressFill}
+                      style={{ width: `${totalProgress}%` }}
+                    />
+                  </div>
+                )}
+
+                {/* Film Strip Grid */}
+                <div className={styles.filmStripGrid}>
+                  {[...pendingShots, ...uploadedShots].slice(0, MAX_DISPOSABLE_SHOTS).map((shot) => (
+                    <div
+                      key={shot.id}
+                      className={`${styles.filmFrame} ${
+                        selectedShots.has(shot.id) ? styles.selected : ''
+                      } ${
+                        uploadedShots.some(u => u.id === shot.id) ? styles.uploaded : ''
+                      }`}
+                      onClick={() => toggleShotSelection(shot.id)}
+                    >
+                      <img
+                        src={shot.dataUrl}
+                        alt={`Shot ${shot.id}`}
+                        className={styles.filmImage}
+                      />
+                      
+                      {/* Upload Status */}
+                      {uploadedShots.some(u => u.id === shot.id) && (
+                        <div className={styles.uploadStatus}>
+                          ✓
+                        </div>
+                      )}
+                      
+                      {/* Upload Progress */}
+                      {uploadProgress[shot.id] !== undefined && uploadProgress[shot.id] < 100 && (
+                        <div className={styles.uploadProgress}>
+                          {uploadProgress[shot.id]}%
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }

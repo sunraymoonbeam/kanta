@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createEvent, updateEvent, deleteEvent, uploadEventImage } from '@/lib/api';
 import { useEvents } from '@/hooks/useEvents';
 import { Event, EventFormData } from '@/types/events';
@@ -9,6 +10,8 @@ import Modal from '@/components/ui/Modal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { formatDateTime } from '@/lib/utils';
 import { DEFAULT_ADMIN_PASSWORD } from '@/lib/constants';
+import { effects } from '@/config/kanta.config';
+import styles from './EventsPage.module.css';
 
 type ModalType = 'create' | 'details' | 'edit' | 'delete' | null;
 

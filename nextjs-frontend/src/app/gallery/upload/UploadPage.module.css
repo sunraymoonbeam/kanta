@@ -1,0 +1,499 @@
+/* Upload Page Styles */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.backgroundEffects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gradientOrb {
+  position: absolute;
+  top: 25%;
+  left: 15%;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(139, 92, 246, 0.05) 50%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  animation: float 20s ease-in-out infinite;
+}
+
+.dots {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle, var(--brand-200) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.2;
+}
+
+[data-theme="dark"] .dots {
+  background-image: radial-gradient(circle, var(--brand-700) 1px, transparent 1px);
+  opacity: 0.15;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.titleIcon {
+  font-size: 1em;
+  filter: drop-shadow(0 4px 8px rgba(139, 92, 246, 0.3));
+}
+
+.titleGradient {
+  background: linear-gradient(135deg, var(--brand-600) 0%, var(--accent-600) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: var(--text-xl);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+/* Empty Event State */
+.emptyEventState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  text-align: center;
+}
+
+.emptyCard {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+}
+
+.emptyTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.emptyDescription {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+/* Upload Sections */
+.uploadSection {
+  margin-bottom: 3rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Device Upload */
+.deviceUploadArea {
+  border: 2px dashed var(--surface-border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  text-align: center;
+  background: var(--surface-secondary);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+}
+
+.deviceUploadArea:hover {
+  border-color: var(--brand-400);
+  background: var(--brand-50);
+}
+
+[data-theme="dark"] .deviceUploadArea:hover {
+  background: var(--brand-900);
+}
+
+.uploadIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.uploadText {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.uploadHint {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.fileInput {
+  display: none;
+}
+
+/* Preview Grid */
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.previewItem {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface-secondary);
+  border: 2px solid var(--surface-border);
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removeButton {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--error-500);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all var(--transition-normal);
+}
+
+.removeButton:hover {
+  background: var(--error-600);
+  transform: scale(1.1);
+}
+
+/* Camera Section */
+.cameraContainer {
+  position: relative;
+  background: var(--surface-primary);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.cameraHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: var(--surface-secondary);
+}
+
+.shotsCounter {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.shotsLeft {
+  color: var(--success-600);
+}
+
+.shotsLimited {
+  color: var(--warning-600);
+}
+
+.shotsExhausted {
+  color: var(--error-600);
+}
+
+.filterSelect {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.cameraViewport {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: var(--surface-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cameraVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cameraError {
+  text-align: center;
+  color: var(--error-600);
+  padding: 2rem;
+}
+
+.cameraControls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--surface-secondary);
+}
+
+.captureButton {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: var(--brand-500);
+  color: white;
+  border: 4px solid white;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-lg);
+}
+
+.captureButton:hover {
+  background: var(--brand-600);
+  transform: scale(1.05);
+}
+
+.captureButton:disabled {
+  background: var(--neutral-400);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Film Strip */
+.filmStrip {
+  margin-top: 2rem;
+}
+
+.filmStripTitle {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filmGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+  background: var(--surface-secondary);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border);
+}
+
+.filmSlot {
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-primary);
+  border: 2px solid var(--surface-border);
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.filmSlot:hover {
+  border-color: var(--brand-400);
+}
+
+.filmSlotSelected {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.filmSlotEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 1.5rem;
+}
+
+.filmImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.filmOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.filmSlotSelected .filmOverlay {
+  opacity: 1;
+}
+
+.filmActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+/* Progress Bar */
+.progressContainer {
+  margin: 1.5rem 0;
+}
+
+.progressBar {
+  width: 100%;
+  height: 0.5rem;
+  background: var(--surface-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+}
+
+.progressText {
+  text-align: center;
+  margin-top: 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Hidden Canvas */
+.hiddenCanvas {
+  display: none;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content {
+    padding: 1rem;
+  }
+
+  .filmGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .cameraViewport {
+    height: 300px;
+  }
+
+  .previewGrid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .filmActions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 2.5rem;
+  }
+
+  .cameraControls {
+    padding: 1rem;
+  }
+
+  .captureButton {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.25rem;
+  }
+}

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import JSZip from 'jszip';
 import { getImages, getImageDetail, deleteImage } from '@/lib/api';
 import { useEvents } from '@/hooks/useEvents';
@@ -12,6 +13,8 @@ import ImageGrid from '@/components/ui/ImageGrid';
 import { cropFaceImage } from '@/lib/imageCrop';
 import { formatDateTime, debounce } from '@/lib/utils';
 import { DEFAULT_ADMIN_PASSWORD } from '@/lib/constants';
+import { effects } from '@/config/kanta.config';
+import styles from './GalleryPage.module.css';
 
 export default function GalleryPage() {
   const { selected } = useEvents();
@@ -263,31 +266,58 @@ export default function GalleryPage() {
   }
 
   return (
-    <div style={{ 
-      padding: '2rem', 
-      maxWidth: '1400px', 
-      margin: '0 auto',
-      background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-      minHeight: '100vh'
-    }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ 
-          textAlign: 'center', 
-          fontSize: '2.5rem', 
-          fontWeight: 'bold', 
-          color: '#1f2937', 
-          marginBottom: '1rem' 
-        }}>
-          📷 Photo Gallery
-        </h1>
-        <p style={{ 
-          textAlign: 'center', 
-          color: '#6b7280', 
-          fontSize: '1.125rem' 
-        }}>
-          Browse photos from <strong>{selected}</strong>
-        </p>
+    <div className={styles.container}>
+      {/* Background Effects */}
+      <div className={styles.backgroundEffects}>
+        {effects.dots.display && (
+          <div 
+            className={styles.dots}
+            style={{
+              opacity: Number(effects.dots.opacity) / 100,
+              backgroundSize: `${Number(effects.dots.size) * 10}px ${Number(effects.dots.size) * 10}px`
+            }}
+          />
+        )}
+        {effects.gradient.display && (
+          <div 
+            className={styles.gradientOrb}
+            style={{
+              opacity: Number(effects.gradient.opacity) / 100,
+              left: `${effects.gradient.x}%`,
+              top: `${effects.gradient.y}%`,
+              width: `${effects.gradient.width}%`,
+              height: `${effects.gradient.height}%`,
+              transform: `rotate(${effects.gradient.tilt}deg)`
+            }}
+          />
+        )}
       </div>
+
+      <div className={styles.content}>
+        <motion.div 
+          className={styles.header}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.h1 
+            className={`${styles.title} ${styles.titleGradient}`}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            <span className={styles.titleIcon}>📷</span>
+            Photo Gallery
+          </motion.h1>
+          <motion.p 
+            className={styles.subtitle}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            Browse photos from <strong>{selected}</strong>
+          </motion.p>
+        </motion.div>
 
       {/* Filters */}
       <Card style={{ marginBottom: '2rem' }} padding="lg">
@@ -702,6 +732,7 @@ export default function GalleryPage() {
           </div>
         </div>
       </Modal>
+      </div>
     </div>
   );
 }
