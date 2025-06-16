@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { getClusters, Cluster } from '../../lib/api';
-import { useEvents } from '../../components/EventContext';
+import { getClusters, Cluster } from '../../api/clusters';
+import { useEvents } from '../../features/events';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const CLUSTER_ID_UNASSIGNED = -1;

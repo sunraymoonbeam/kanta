@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEvents } from './EventContext';
+import { useEvents } from '../events';
 
 export default function Navbar() {
   const { events, selected, setSelected, loading, error } = useEvents();

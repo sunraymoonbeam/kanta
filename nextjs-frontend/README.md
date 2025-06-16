@@ -14,9 +14,10 @@ This directory contains a lightweight Next.js UI that mirrors the original Strea
 
 ## Structure
 
-- `app/` – route pages (`events`, `camera`, `gallery`, `people`)
-- `lib/api.ts` – helper functions that call the FastAPI endpoints
-- `components/` – shared React components such as the navbar
+- `src/app/` – route pages (`events`, `camera`, `gallery`, `people`)
+- `src/api/` – helper modules that call the FastAPI backend
+- `src/features/` – feature components like the events context and navbar
+- `src/utils/` – shared utilities
 
 Each page roughly corresponds to the Streamlit tab with similar forms and filters.
 

@@ -1,7 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import Navbar from '../components/Navbar';
-import { EventProvider } from '../components/EventContext';
+import { Navbar } from '../features/ui';
+import { EventProvider } from '../features/events';
 
 export const metadata: Metadata = {
   title: 'Kanta',

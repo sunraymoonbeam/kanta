@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { createEvent, updateEvent, deleteEvent, uploadEventImage, Event } from '../../lib/api';
-import { useEvents } from '../../components/EventContext';
+import { createEvent, updateEvent, deleteEvent, uploadEventImage, Event } from '../../api/events';
+import { useEvents } from '../../features/events';
 
 // Modal component
 function Modal({ isOpen, onClose, title, children }: { 

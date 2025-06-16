@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { uploadImage } from '../../lib/api';
-import { useEvents } from '../../components/EventContext';
+import { uploadImage } from '../../api/images';
+import { useEvents } from '../../features/events';
 
 const MAX_DISPOSABLE_SHOTS = 20;
 const FILM_STRIP_ROWS = 4;

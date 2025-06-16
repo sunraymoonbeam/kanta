@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getEvents, Event } from '../lib/api';
+import { getEvents, Event } from '../../api/events';
 
 interface EventContextType {
   events: Event[];
