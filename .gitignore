@@ -180,3 +180,6 @@ cython_debug/
 
 # BMAD
 flattened-codebase.xml
+.bmad-core/
+.claude/
+web-bundles/
