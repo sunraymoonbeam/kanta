@@ -1,4 +1,44 @@
+x-postgres-common: &postgres-common
+  POSTGRES_USER: ${POSTGRES_USER:-kanta_admin}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Reallysecurepassword123}
+  POSTGRES_DB: ${POSTGRES_DB:-kanta_test}
+  POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+
 services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg15-bookworm
+    restart: always
+    environment:
+      <<: *postgres-common
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: >
+      bash -c "
+        docker-entrypoint.sh postgres &
+        until pg_isready -U ${POSTGRES_USER:-kanta_admin} -d ${POSTGRES_DB:-kanta_test}; do
+          sleep 1
+        done
+        psql -U ${POSTGRES_USER:-kanta_admin} -d ${POSTGRES_DB:-kanta_test} -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+        wait
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kanta_admin} -d ${POSTGRES_DB:-kanta_test}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    restart: always
+    ports:
+      - "10000:10000"  # Blob service
+    volumes:
+      - azurite_data:/data
+    command: azurite --blobHost 0.0.0.0 --loose --skipApiVersionCheck
+
   backend:
     image: kanta.azurecr.io/backend:latest 
     build:
@@ -8,8 +48,6 @@ services:
     command: fastapi run src/app/main.py --host 0.0.0.0 --port 8000
     ports:
       - 8000:8000
-    env_file:
-      - .env      
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/system/health || exit 1"]
       interval: 10s
@@ -17,9 +55,16 @@ services:
       retries: 5
       start_period: 40s
     environment:
-      - UV_COMPILE_BYTECODE=1
-      - UV_LINK_MODE=copy
-      - KANTA_SERVICE_URL=https://kanta.domain.com
+      <<: *postgres-common
+      UV_COMPILE_BYTECODE: 1
+      UV_LINK_MODE: copy
+      KANTA_SERVICE_URL: https://kanta.domain.com
+      POSTGRES_SERVER: postgres
+      AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
     develop:
       watch:
         # only sync source code & main script
@@ -61,3 +106,7 @@ services:
 networks:
   default:
     driver: bridge
+
+volumes:
+  postgres_data:
+  azurite_data:
