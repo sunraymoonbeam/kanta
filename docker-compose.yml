@@ -4,6 +4,9 @@ x-postgres-common: &postgres-common
   POSTGRES_DB: ${POSTGRES_DB:-kanta_test}
   POSTGRES_PORT: ${POSTGRES_PORT:-5432}
 
+x-azurite-common: &azurite-common
+  AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+
 services:
   postgres:
     image: pgvector/pgvector:0.8.0-pg15-bookworm
@@ -55,12 +58,11 @@ services:
       retries: 5
       start_period: 40s
     environment:
-      <<: *postgres-common
+      <<: [*postgres-common, *azurite-common]
       UV_COMPILE_BYTECODE: 1
       UV_LINK_MODE: copy
       KANTA_SERVICE_URL: https://kanta.domain.com
       POSTGRES_SERVER: postgres
-      AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,7 +75,6 @@ services:
           target: /app/src/app
 
   frontend:
-    image: kanta.azurecr.io/frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -103,6 +104,28 @@ services:
           path: ./frontend/utils
           target: /app/utils
 
+  # Cluster Faces Scheduler to simulate AWS lambda
+  cluster-faces-scheduler:
+    build:
+      context: ./cluster-faces
+      dockerfile: Dockerfile
+    environment:
+      <<: [*postgres-common, *azurite-common]
+      POSTGRES_SERVER: postgres
+    entrypoint: ["/bin/sh"]
+    command: 
+      - -c
+      - |
+        while true; do
+          echo "Running cluster-faces at $$(date)"
+          python main.py
+          echo "Completed run at $$(date)"
+          sleep 60
+        done
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 networks:
   default:
     driver: bridge
@@ -110,3 +133,4 @@ networks:
 volumes:
   postgres_data:
   azurite_data:
+  localstack_data:
