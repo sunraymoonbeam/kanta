@@ -1,6 +1,9 @@
 import streamlit as st
 from utils.api import wait_for_backend
 from utils.session import get_event_selection, init_session_state
+from dotenv import load_dotenv
+# Load environment variables
+load_dotenv()
 
 # Page Configuration
 st.set_page_config(

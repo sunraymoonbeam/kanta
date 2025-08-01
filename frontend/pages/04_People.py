@@ -107,6 +107,10 @@ with tab_people:
                         sample_b64_urls: List[str] = []
                         if samples:
                             for sample_detail in samples:
+                                if "azurite" in sample_detail.get("sample_blob_url", ""):
+                                    sample_detail["sample_blob_url"] = sample_detail[
+                                        "sample_blob_url"
+                                    ].replace("azurite", "localhost")
                                 image_data_stream = fetch_image_bytes_from_url(
                                     sample_detail.get("sample_blob_url")
                                 )
@@ -359,6 +363,10 @@ with tab_similarity:
             for idx, result_face_info in enumerate(ss.similarity_results):
                 with result_display_cols[idx % num_result_cols]:
                     with st.container():
+                        if "azurite" in result_face_info.get("azure_blob_url", ""):
+                            result_face_info["azure_blob_url"] = result_face_info[
+                                "azure_blob_url"
+                            ].replace("azurite", "localhost")
                         result_image_stream = fetch_image_bytes_from_url(
                             result_face_info.get("azure_blob_url")
                         )
