@@ -336,6 +336,11 @@ def image_detail_popover(image_uuid: str) -> None:
     info = details.get("image", {})
     faces = details.get("faces", [])
 
+    if "azurite" in info.get("azure_blob_url", ""):
+        info["azure_blob_url"] = info["azure_blob_url"].replace(
+            "azurite", "localhost"
+        )
+
     st.image(info.get("azure_blob_url"), use_container_width=True)
     created = info.get("created_at")
     if created:
@@ -467,6 +472,10 @@ else:
     for idx, img in enumerate(images_data):
         with grid_cols[idx % NUM_GRID_COLS]:
             face_count_for_title = img.get("faces", img.get("faces_count", "N/A"))
+            if "azurite" in img.get("azure_blob_url", ""):
+                img["azure_blob_url"] = img["azure_blob_url"].replace(
+                    "azurite", "localhost"
+                )
             st.markdown(
                 f"""
 <div class='image-grid-cell' title='Faces: {face_count_for_title}'>
