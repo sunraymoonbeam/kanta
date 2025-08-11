@@ -18,15 +18,6 @@ export default function LandingPage() {
               <span className="text-xl font-bold text-gray-900">Kanta</span>
             </div>
             
-            <div className="hidden md:flex items-center gap-6">
-              <Link href="/events" className="text-gray-600 hover:text-gray-900 transition-colors">
-                Events
-              </Link>
-              <Link href="/events/new" className="text-gray-600 hover:text-gray-900 transition-colors">
-                Create Event
-              </Link>
-            </div>
-            
             <div className="flex items-center gap-3">
               <Button asChild variant="outline">
                 <Link href="/events">
