@@ -95,7 +95,7 @@ export default function LandingPage() {
                 <li><span className="text-gray-400">Contact</span></li>
                 <li>
                   <a 
-                    href="https://github.com" 
+                    href="https://github.com/shafiqninaba/kanta" 
                     className="flex items-center gap-1 hover:text-gray-900"
                     target="_blank" 
                     rel="noopener noreferrer"
@@ -109,7 +109,7 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t pt-8 mt-8 text-center text-gray-500 text-sm">
-            <p>&copy; 2024 Kanta. All rights reserved.</p>
+            <p>&copy; 2025 Kanta. All rights reserved.</p>
           </div>
         </div>
       </footer>
