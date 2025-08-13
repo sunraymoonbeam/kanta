@@ -17,9 +17,9 @@ RUN set -eux; \
       'deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm main' \
       'deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-15 main' \
       > /etc/apt/sources.list.d/llvm.list && \
-    wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
+    wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/llvm.gpg && \
     apt-get update && \
-    apt-get install -y --no-install-recommends clang-15 lld-15 lldb-15 && \
+    apt-get install -y --no-install-recommends clang-15 lld-15 && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure build settings for dlib and other binary packages
@@ -186,7 +186,7 @@ CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 #       'deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm main' \
 #       'deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-15 main' \
 #       > /etc/apt/sources.list.d/llvm.list && \
-#     wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
+#     wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/llvm.gpg && \
 #     apt-get update && \
 #     apt-get install -y --no-install-recommends clang-15 lld-15 lldb-15
 
