@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useState, use } from 'react';
-import { CameraScreen } from '../../../components/CameraScreen';
-import { GalleryScreen } from '../../../components/GalleryScreen';
-import { FaceClusteringScreen } from '../../../components/FaceClusteringScreen';
-import { BottomNavigation, type Screen } from '../../../components/BottomNavigation';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { use } from 'react';
 
 interface Props {
   params: Promise<{
@@ -12,35 +10,20 @@ interface Props {
   }>;
 }
 
-export default function EventCameraApp({ params }: Props) {
-  const [activeScreen, setActiveScreen] = useState<Screen>('camera');
+export default function EventRedirect({ params }: Props) {
+  const router = useRouter();
   const { code } = use(params);
 
-  const renderScreen = () => {
-    switch (activeScreen) {
-      case 'camera':
-        return <CameraScreen />;
-      case 'gallery':
-        return <GalleryScreen />;
-      case 'faces':
-        return <FaceClusteringScreen />;
-      default:
-        return <CameraScreen />;
-    }
-  };
+  useEffect(() => {
+    // Redirect to the landing page
+    router.replace(`/event/${code}/landing`);
+  }, [code, router]);
 
   return (
-    <div className="h-screen bg-background flex flex-col max-w-md mx-auto relative overflow-hidden">
-      <header className="p-4 bg-gray-50 border-b">
-        <h1 className="text-lg font-semibold text-gray-900">Event: {code}</h1>
-      </header>
-      <main className="flex-1 overflow-hidden">
-        {renderScreen()}
-      </main>
-      <BottomNavigation 
-        activeScreen={activeScreen} 
-        onScreenChange={setActiveScreen} 
-      />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="text-center">
+        <p className="text-gray-600 text-lg">Redirecting to event...</p>
+      </div>
     </div>
   );
 }

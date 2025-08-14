@@ -175,7 +175,7 @@ export default function EventDetailsPage() {
 
             <div className="flex gap-3">
               <Button asChild variant="outline">
-                <Link href={`/event/${event.code}`} target="_blank" rel="noopener noreferrer">
+                <Link href={`/event/${event.code}/landing`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Preview App
                 </Link>
@@ -251,7 +251,7 @@ export default function EventDetailsPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href={`/event/${event.code}`} target="_blank">
+                  <Link href={`/event/${event.code}/landing`} target="_blank">
                     <Camera className="w-4 h-4 mr-2" />
                     Test Camera App
                   </Link>
@@ -275,7 +275,7 @@ export default function EventDetailsPage() {
               <div className="space-y-2">
                 <p className="text-xs text-blue-700">Direct link:</p>
                 <code className="block text-sm bg-white p-2 rounded border text-blue-900 break-all">
-                  {typeof window !== 'undefined' ? `${window.location.origin}/event/${event.code}` : ''}
+                  {typeof window !== 'undefined' ? `${window.location.origin}/event/${event.code}/landing` : ''}
                 </code>
               </div>
             </div>
