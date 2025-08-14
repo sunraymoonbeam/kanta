@@ -25,7 +25,7 @@ export function EventForm({ onSubmit, loading = false, initialData = {} }: Event
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.event_code.trim()) {
+    if (!formData.event_code?.trim()) {
       newErrors.event_code = 'Event code is required';
     } else if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(formData.event_code)) {
       newErrors.event_code = 'Event code must be 3-63 characters, lowercase letters, numbers, and hyphens only';

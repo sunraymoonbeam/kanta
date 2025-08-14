@@ -3,7 +3,7 @@ import { Camera, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface CameraViewfinderProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   isStreamActive: boolean;
   isLoading: boolean;
   error: string | null;

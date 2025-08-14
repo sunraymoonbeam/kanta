@@ -164,7 +164,7 @@ export function CameraScreen() {
       const track = streamRef.current.getVideoTracks()[0];
       if (track && track.getCapabilities && track.applyConstraints) {
         const capabilities = track.getCapabilities();
-        if (capabilities.torch) {
+        if ((capabilities as any).torch) {
           track.applyConstraints({
             advanced: [{ torch: !flashEnabled } as any]
           }).then(() => {

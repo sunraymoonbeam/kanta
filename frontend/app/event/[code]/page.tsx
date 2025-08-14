@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, use } from 'react';
 import { CameraScreen } from '../../../components/CameraScreen';
 import { GalleryScreen } from '../../../components/GalleryScreen';
 import { FaceClusteringScreen } from '../../../components/FaceClusteringScreen';
 import { BottomNavigation, type Screen } from '../../../components/BottomNavigation';
 
 interface Props {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 export default function EventCameraApp({ params }: Props) {
   const [activeScreen, setActiveScreen] = useState<Screen>('camera');
-  const { code } = params;
+  const { code } = use(params);
 
   const renderScreen = () => {
     switch (activeScreen) {
