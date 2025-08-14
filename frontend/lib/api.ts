@@ -1,3 +1,5 @@
+import { fixAzuriteUrlsInObject } from './utils';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 export interface EventInfo {
@@ -55,29 +57,33 @@ class EventsApi {
   }
 
   async getEvents(): Promise<EventsResponse> {
-    return this.fetchApi<EventsResponse>('/events');
+    const response = await this.fetchApi<EventsResponse>('/events');
+    return fixAzuriteUrlsInObject(response);
   }
 
   async getEvent(code: string): Promise<EventInfo> {
     const response = await this.fetchApi<EventsResponse>(`/events?event_code=${code}`);
-    if (response.events && response.events.length > 0) {
-      return response.events[0];
+    const fixedResponse = fixAzuriteUrlsInObject(response);
+    if (fixedResponse.events && fixedResponse.events.length > 0) {
+      return fixedResponse.events[0];
     }
     throw new ApiError(404, 'Event not found');
   }
 
   async createEvent(data: CreateEventRequest): Promise<EventInfo> {
-    return this.fetchApi<EventInfo>('/events', {
+    const response = await this.fetchApi<EventInfo>('/events', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    return fixAzuriteUrlsInObject(response);
   }
 
   async updateEvent(code: string, data: UpdateEventRequest): Promise<EventInfo> {
-    return this.fetchApi<EventInfo>('/events', {
+    const response = await this.fetchApi<EventInfo>('/events', {
       method: 'PUT',
       body: JSON.stringify({ ...data, event_code: code }),
     });
+    return fixAzuriteUrlsInObject(response);
   }
 
   async deleteEvent(code: string): Promise<void> {
@@ -104,11 +110,13 @@ class EventsApi {
       );
     }
 
-    return response.json();
+    const result = await response.json();
+    return fixAzuriteUrlsInObject(result);
   }
 
   async getEventPhotos(eventCode: string): Promise<any> {
-    return this.fetchApi<any>(`/events/${eventCode}/photos`);
+    const response = await this.fetchApi<any>(`/events/${eventCode}/photos`);
+    return fixAzuriteUrlsInObject(response);
   }
 }
 
