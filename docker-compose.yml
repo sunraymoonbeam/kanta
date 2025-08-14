@@ -79,15 +79,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     platform: linux/amd64
-    command: ["streamlit", "run", "Home.py"]
     ports:
-      - 8501:8501
+      - 3000:3000
     environment:
-      - STREAMLIT_SERVER_PORT=8501
-      - BACKEND_SERVER_URL=http://backend:8000/api/v1
-      - ADMIN_PASSWORD=password123
-    volumes:
-      - ./frontend/assets:/app/assets
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
     depends_on:
       backend:
         condition: service_healthy
@@ -95,14 +91,23 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./frontend/Home.py
-          target: /app/Home.py
+          path: ./frontend/app
+          target: /app/app
         - action: sync
-          path: ./frontend/pages
-          target: /app/pages
+          path: ./frontend/components
+          target: /app/components
         - action: sync
-          path: ./frontend/utils
-          target: /app/utils
+          path: ./frontend/lib
+          target: /app/lib
+        - action: sync
+          path: ./frontend/hooks
+          target: /app/hooks
+        - action: sync
+          path: ./frontend/contexts
+          target: /app/contexts
+        - action: sync
+          path: ./frontend/public
+          target: /app/public
 
   # Cluster Faces Scheduler to simulate AWS lambda
   cluster-faces-scheduler:
