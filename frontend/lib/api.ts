@@ -119,6 +119,11 @@ class EventsApi {
       );
     }
 
+    // Handle 204 No Content responses (typically from DELETE requests)
+    if (response.status === 204) {
+      return {} as T;
+    }
+
     return response.json();
   }
 
