@@ -22,7 +22,7 @@ router = APIRouter(tags=["clusters"])
 )
 async def read_clusters(
     event_code: str = Query(
-        ..., regex=r"^[a-zA-Z0-9_]+$", description="Event code to filter clusters"
+        ..., regex=r"^[a-zA-Z0-9_-]+$", description="Event code to filter clusters"
     ),
     cluster_ids: Optional[List[int]] = Query(
         None, alias="cluster_ids", description="List of cluster IDs to filter images"
@@ -67,7 +67,7 @@ async def read_clusters(
 async def find_similar(
     event_code: str = Query(
         ...,
-        regex=r"^[a-zA-Z0-9_]+$",
+        regex=r"^[a-zA-Z0-9_-]+$",
         description="Event code to filter images",
     ),
     image: UploadFile = File(..., description="Face image containing exactly one face"),

@@ -1,7 +1,7 @@
 # conf/config.yaml
 # Configuration for clustering face embeddings using Hydra.
 
-algo: hdbscan #[hdbscan, dbscan, optics, affinity_propagation, chinese_whispers, agglomerative, birch]
+algo: dbscan #[hdbscan, dbscan, optics, affinity_propagation, chinese_whispers, agglomerative, birch]
 processing_method: normalize # [none, normalize, pca, umap]
 
 # --------------------------------------------------------------------
@@ -10,7 +10,7 @@ processing_method: normalize # [none, normalize, pca, umap]
 hdbscan:
   min_cluster_size: 5 # Smallest size grouping for clusters (granularity)
   cluster_selection_method: leaf  # Method to select clusters: 'eom' (excess of mass) or 'leaf'
-  cluster_selection_epsilon: 0.0 # Extra tolerance for cluster selection (0.0 = strict)
+  cluster_selection_epsilon: 0.9 # Extra tolerance for cluster selection (0.0 = strict)
   alpha: 1.0 # Stability parameter (1.0 = default)
   metric: euclidean # Distance metric: 'euclidean', 'cosine', etc.
 

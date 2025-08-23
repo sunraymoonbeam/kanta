@@ -17,3 +17,5 @@ To start the app, follow these steps:
    ```console
    docker compose up
    ```
+
+4. Seed the database (optional) according to the instructions in [data/README.md](data/README.md).

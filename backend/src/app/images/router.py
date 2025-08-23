@@ -43,7 +43,7 @@ router = APIRouter(prefix="/pics", tags=["images"])
 async def get(
     event_code: str = Query(
         ...,
-        pattern=r"^[a-zA-Z0-9_]+$",
+        pattern=r"^[a-zA-Z0-9_-]+$",
         description="Event code to filter images",
     ),
     limit: int = Query(
@@ -141,7 +141,7 @@ async def upload(
     background_tasks: BackgroundTasks,
     event_code: str = Path(
         ...,
-        pattern=r"^[a-zA-Z0-9_]+$",
+        regex=r"^[a-zA-Z0-9_-]+$",
         description="Event code to associate with this image",
     ),
     image_file: UploadFile = File(...),

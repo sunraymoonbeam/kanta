@@ -49,7 +49,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 async def get_events_endpoint(
     event_code: Optional[str] = Query(
         None,
-        pattern=r"^[a-zA-Z0-9_]+$",
+        pattern=r"^[a-zA-Z0-9_-]+$",
         description="If set, return only the event with this code",
     ),
     running: Optional[bool] = Query(

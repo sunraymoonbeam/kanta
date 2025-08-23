@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!frontend/lib/
 lib64/
 parts/
 sdist/
@@ -25,11 +26,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-data/**
-!data/**/
-!data/**/.gitkeep
-!data/test/**/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -177,3 +173,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# BMAD
+flattened-codebase.xml
+.bmad-core/
+.claude/
+web-bundles/

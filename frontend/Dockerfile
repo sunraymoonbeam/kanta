@@ -1,200 +1,55 @@
-# ----------------------------------------------------------------------------------------------------------------------------------------
-# Debian Bookworm Image (Python Slim)
-# ----------------------------------------------------------------------------------------------------------------------------------------
-# FROM python:3.12-slim
+FROM node:20-alpine AS base
 
-# # Install build/runtime dependencies
-# RUN apt-get update && \
-#     apt-get install -y --no-install-recommends \
-#       build-essential \
-#       libffi-dev \
-#       libssl-dev \
-#       libjpeg-dev \
-#       zlib1g-dev && \
-#     rm -rf /var/lib/apt/lists/*
-
-# WORKDIR /app
-
-# # Copy requirements and install
-# COPY requirements.txt .
-# RUN pip install --upgrade pip && \
-#     pip install --no-cache-dir -r requirements.txt
-
-# # Copy application code
-# COPY . .
-
-# # Expose Streamlit’s port
-# EXPOSE 8501
-
-# # Launch Streamlit
-# CMD ["streamlit", "run", "Home.py"]
-
-# ----------------------------------------------------------------------------------------------------------------------------------------
-# Alphine Image
-# ----------------------------------------------------------------------------------------------------------------------------------------
-FROM python:3.12-alpine
-
-# Install build/runtime dependencies
-RUN apk update && \
-    apk add --no-cache \
-      build-base \
-      linux-headers \
-      libffi-dev \
-      openssl-dev
-
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy requirements and install
-COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Copy package files
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-# Copy application code
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Expose Streamlit’s port
-EXPOSE 8501
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED 1
 
-# Launch Streamlit
-CMD ["streamlit", "run", "Home.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+RUN npm run build
 
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
 
-# ----------------------------------------------------------------------------------------------------------------------------------------
-# UV based Image
-# ----------------------------------------------------------------------------------------------------------------------------------------
-# FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+ENV NODE_ENV production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+# ENV NEXT_TELEMETRY_DISABLED 1
 
-# WORKDIR /app
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# ENV UV_COMPILE_BYTECODE=1
-# ENV UV_LINK_MODE=copy
-# ENV PATH="/app/.venv/bin:$PATH"
+COPY --from=builder /app/public ./public
 
-# RUN --mount=type=cache,target=/root/.cache/uv \
-#     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-#     uv sync --no-install-project
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
-# ADD . /app
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# RUN --mount=type=cache,target=/root/.cache/uv \
-#     uv sync --frozen --no-dev
+USER nextjs
 
-# CMD ["uv", "run", "streamlit", "run", "Home.py"]
+EXPOSE 3000
 
+ENV PORT 3000
 
-
-# ----------------------------------------------------------------------------------------------------------------------------------------
-# Alphine Image (Multi-Stage Build)
-# ----------------------------------------------------------------------------------------------------------------------------------------
-
-# =============================================================================
-# Stage 1: Builder
-# =============================================================================
-# FROM python:3.12-alpine AS builder
-
-# # Install build‐time dependencies
-# RUN apk update && \
-#     apk add --no-cache \
-#       build-base \
-#       linux-headers \
-#       libffi-dev \
-#       openssl-dev
-
-# # Create a venv and make it default
-# RUN python -m venv /opt/venv
-# ENV PATH="/opt/venv/bin:$PATH"
-
-# WORKDIR /app
-
-# # Copy only requirements first (cache layer)
-# COPY requirements.txt .
-
-# # Install Python deps into the venv
-# RUN pip install --upgrade pip && \
-#     pip install --no-cache-dir -r requirements.txt
-
-# # (No need to copy your app code here—only requirements matter for caching.)
-
-# =============================================================================
-# # Stage 2: Final
-# =============================================================================
-# FROM python:3.12-alpine
-
-# # Install any runtime libraries missing from Alpine
-# # (e.g. OpenSSL/ffi for cryptography, etc.)
-# RUN apk update && \
-#     apk add --no-cache \
-#       libffi \
-#       openssl
-
-# # Copy Python venv from builder
-# COPY --from=builder /opt/venv /opt/venv
-# ENV PATH="/opt/venv/bin:$PATH"
-
-# WORKDIR /app
-
-# # Copy the application code
-# COPY . .
-
-# # Expose Streamlit’s default port (if you want to override, change accordingly)
-# EXPOSE 8501
-
-# # Launch Streamlit
-# CMD ["streamlit", "run", "Home.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
-
-
-# ----------------------------------------------------------------------------------------------------------------------------------------
-# Debian Bookworm Image (Multi-Stage Build)
-# ----------------------------------------------------------------------------------------------------------------------------------------
-# =============================================================================
-# Stage 1: Builder
-# =============================================================================
-# FROM python:3.12-slim AS builder
-
-# # Install build-time dependencies
-# RUN apt-get update && \
-#     apt-get install -y --no-install-recommends \
-#       build-essential \
-#       libffi-dev \
-#       libssl-dev && \
-#     rm -rf /var/lib/apt/lists/*
-
-# # Create a virtual environment
-# RUN python -m venv /opt/venv
-# ENV PATH="/opt/venv/bin:$PATH"
-
-# WORKDIR /app
-
-# # Copy requirements.txt first for caching
-# COPY requirements.txt .
-
-# # Upgrade pip and install Python deps into the venv
-# RUN pip install --upgrade pip && \
-#     pip install --no-cache-dir -r requirements.txt
-
-# =============================================================================
-# Stage 2: Final
-# =============================================================================
-# FROM python:3.12-slim
-
-# # Install runtime libraries that Python packages commonly need
-# RUN apt-get update && \
-#     apt-get install -y --no-install-recommends \
-#       libffi7 \
-#       libssl3 && \
-#     rm -rf /var/lib/apt/lists/*
-
-# # Copy the pre-built venv from the builder stage
-# COPY --from=builder /opt/venv /opt/venv
-# ENV PATH="/opt/venv/bin:$PATH"
-
-# WORKDIR /app
-
-# # Copy the application source
-# COPY . .
-
-# # Expose Streamlit’s default port
-# EXPOSE 8501
-
-# # Run Streamlit
-# CMD ["streamlit", "run", "Home.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/next-config-js/output
+CMD HOSTNAME="0.0.0.0" node server.js
