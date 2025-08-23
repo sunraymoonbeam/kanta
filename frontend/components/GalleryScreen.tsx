@@ -97,38 +97,77 @@ export function GalleryScreen({ eventCode }: GalleryScreenProps) {
   // Backend integration state
   const [backendPhotos, setBackendPhotos] = useState<ImageListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
   const [useMockData, setUseMockData] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const BATCH_SIZE = 50;
 
   // Fetch photos from backend
-  const fetchPhotos = useCallback(async () => {
+  const fetchPhotos = useCallback(async (loadMore = false) => {
     if (!eventCode) return;
+    if (loadMore && (!hasMore || isLoadingMore)) return;
     
-    setIsLoading(true);
-    setError('');
+    if (loadMore) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+      setError('');
+      setOffset(0);
+      setHasMore(true);
+    }
     
     try {
+      const currentOffset = loadMore ? offset : 0;
       const photos = await eventsApi.getImages(eventCode, {
-        limit: 100,
-        offset: 0
+        limit: BATCH_SIZE,
+        offset: currentOffset
       });
-      setBackendPhotos(photos);
+      
+      if (loadMore) {
+        setBackendPhotos(prev => [...prev, ...photos]);
+        setOffset(prev => prev + photos.length);
+      } else {
+        setBackendPhotos(photos);
+        setOffset(photos.length);
+      }
+      
+      // Check if we have more photos to load
+      if (photos.length < BATCH_SIZE) {
+        setHasMore(false);
+      }
+      
       setUseMockData(false);
     } catch (err) {
       console.error('Failed to fetch photos:', err);
       const errorMessage = handleApiError(err);
       setError(errorMessage);
       // Fall back to mock data if backend is not available
-      setUseMockData(true);
+      if (!loadMore) {
+        setUseMockData(true);
+      }
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  }, [eventCode]);
+  }, [eventCode, offset, hasMore, isLoadingMore]);
 
   // Load photos on component mount and when event code changes
   useEffect(() => {
-    fetchPhotos();
-  }, [fetchPhotos]);
+    fetchPhotos(false);
+  }, [eventCode]);
+
+  // Infinite scroll handler
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const scrollContainer = e.currentTarget;
+    const scrollBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight;
+    
+    // Load more when user is within 100px of the bottom
+    if (scrollBottom < 100 && !isLoadingMore && hasMore && !useMockData) {
+      fetchPhotos(true);
+    }
+  }, [fetchPhotos, isLoadingMore, hasMore, useMockData]);
 
   // Convert backend photos to PhotoData format
   const displayPhotos: PhotoData[] = useMockData 
@@ -241,13 +280,18 @@ export function GalleryScreen({ eventCode }: GalleryScreenProps) {
               variant="ghost" 
               size="icon" 
               className="w-8 h-8 sm:w-9 sm:h-9"
-              onClick={fetchPhotos}
-              disabled={isLoading}
+              onClick={() => fetchPhotos(false)}
+              disabled={isLoading || isLoadingMore}
               title="Refresh photos"
             >
-              <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${isLoading || isLoadingMore ? 'animate-spin' : ''}`} />
             </Button>
-            <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-9 sm:h-9">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="w-8 h-8 sm:w-9 sm:h-9"
+              disabled={isLoadingMore}
+            >
               <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
@@ -255,13 +299,13 @@ export function GalleryScreen({ eventCode }: GalleryScreenProps) {
       </div>
 
       {/* Photo Grid */}
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-2" onScroll={handleScroll}>
         {error && !useMockData && (
           <div className="flex items-center justify-center h-32 text-center">
             <div className="text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-2" />
               <p className="text-sm">{error}</p>
-              <Button variant="outline" size="sm" className="mt-2" onClick={fetchPhotos}>
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => fetchPhotos(false)}>
                 Try Again
               </Button>
             </div>
@@ -321,6 +365,21 @@ export function GalleryScreen({ eventCode }: GalleryScreenProps) {
             );
           })}
         </div>
+        
+        {/* Loading more indicator */}
+        {isLoadingMore && (
+          <div className="flex items-center justify-center py-4">
+            <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading more photos...</span>
+          </div>
+        )}
+        
+        {/* End of list indicator */}
+        {!hasMore && !useMockData && displayPhotos.length > 0 && (
+          <div className="text-center py-4 text-sm text-muted-foreground">
+            All {displayPhotos.length} photos loaded
+          </div>
+        )}
       </div>
       
       {/* Image Modal */}
