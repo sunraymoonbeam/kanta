@@ -4,87 +4,6 @@ import { MoreVertical, RefreshCw, AlertCircle, Users } from 'lucide-react';
 import { Button } from './ui/button';
 import { eventsApi, handleApiError, type ClusterInfo } from '../lib/api';
 
-// Mock face clustering data
-const mockFaceClusters = [
-  {
-    id: 1,
-    personName: 'Person 1',
-    faceCount: 12,
-    faces: [
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face&sat=20',
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face&blur=1',
-    ]
-  },
-  {
-    id: 2,
-    personName: 'Person 2',
-    faceCount: 8,
-    faces: [
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face&sat=20',
-    ]
-  },
-  {
-    id: 3,
-    personName: 'Person 3',
-    faceCount: 15,
-    faces: [
-      'https://images.unsplash.com/photo-1494790108755-2616b612b639?w=100&h=100&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1494790108755-2616b612b639?w=100&h=100&fit=crop&crop=face&sat=20',
-      'https://images.unsplash.com/photo-1494790108755-2616b612b639?w=100&h=100&fit=crop&crop=face&blur=1',
-    ]
-  },
-  {
-    id: 4,
-    personName: 'Person 4',
-    faceCount: 22,
-    faces: [
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&h=100&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&h=100&fit=crop&crop=face&sat=20',
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&h=100&fit=crop&crop=face&blur=1',
-    ]
-  },
-  {
-    id: 5,
-    personName: 'Person 5',
-    faceCount: 6,
-    faces: [
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face&sat=20',
-    ]
-  },
-  {
-    id: 6,
-    personName: 'Person 6',
-    faceCount: 18,
-    faces: [
-      'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=100&h=100&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=100&h=100&fit=crop&crop=face&sat=20',
-      'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=100&h=100&fit=crop&crop=face&blur=1',
-    ]
-  },
-  {
-    id: 7,
-    personName: 'Person 7',
-    faceCount: 11,
-    faces: [
-      'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=100&h=100&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=100&h=100&fit=crop&crop=face&sat=20',
-    ]
-  },
-  {
-    id: 8,
-    personName: 'Person 8',
-    faceCount: 8,
-    faces: [
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face&sat=20',
-    ]
-  }
-];
-
-const totalFaces = mockFaceClusters.reduce((sum, cluster) => sum + cluster.faceCount, 0);
 
 interface FaceClusteringScreenProps {
   eventCode: string;
@@ -95,7 +14,6 @@ export function FaceClusteringScreen({ eventCode }: FaceClusteringScreenProps) {
   const [backendClusters, setBackendClusters] = useState<ClusterInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [useMockData, setUseMockData] = useState(false);
 
   // Fetch clusters from backend
   const fetchClusters = useCallback(async () => {
@@ -107,13 +25,10 @@ export function FaceClusteringScreen({ eventCode }: FaceClusteringScreenProps) {
     try {
       const clusters = await eventsApi.getClusters(eventCode);
       setBackendClusters(clusters);
-      setUseMockData(false);
     } catch (err) {
       console.error('Failed to fetch clusters:', err);
       const errorMessage = handleApiError(err);
       setError(errorMessage);
-      // Fall back to mock data if backend is not available
-      setUseMockData(true);
     } finally {
       setIsLoading(false);
     }
@@ -124,8 +39,8 @@ export function FaceClusteringScreen({ eventCode }: FaceClusteringScreenProps) {
     fetchClusters();
   }, [fetchClusters]);
 
-  // Use either backend data or mock data
-  const displayClusters = useMockData ? mockFaceClusters : backendClusters.map(cluster => ({
+  // Use backend data
+  const displayClusters = backendClusters.map(cluster => ({
     id: cluster.cluster_id,
     personName: `Person ${cluster.cluster_id}`,
     faceCount: cluster.face_count,
@@ -148,7 +63,7 @@ export function FaceClusteringScreen({ eventCode }: FaceClusteringScreenProps) {
               {error ? (
                 <span className="text-red-500">{error}</span>
               ) : (
-                `${totalFacesCount} faces detected${useMockData ? ' (demo)' : ''}`
+                `${totalFacesCount} faces detected`
               )}
             </p>
           </div>
@@ -179,7 +94,7 @@ export function FaceClusteringScreen({ eventCode }: FaceClusteringScreenProps) {
 
       {/* Face Clusters */}
       <div className="flex-1 overflow-y-auto p-4">
-        {error && !useMockData && (
+        {error && (
           <div className="flex items-center justify-center h-32 text-center">
             <div className="text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-2" />
