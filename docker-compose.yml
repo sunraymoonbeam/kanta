@@ -115,6 +115,9 @@ services:
       postgres:
         condition: service_healthy
 
+    volumes:
+      - ./cluster-faces/conf:/function/conf
+
 networks:
   default:
     driver: bridge

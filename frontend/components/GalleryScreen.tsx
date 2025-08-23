@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { MoreVertical, Check, Download, Square } from 'lucide-react';
+import { MoreVertical, Check, Download, Square, RefreshCw, AlertCircle, Camera } from 'lucide-react';
 import { Button } from './ui/button';
 import { ImageModal, PhotoData } from './ImageModal';
+import { eventsApi, handleApiError, type ImageListItem } from '../lib/api';
 
 // Mock photo data with faces
 const mockPhotos: PhotoData[] = [
@@ -83,19 +84,76 @@ const mockPhotos: PhotoData[] = [
   },
 ];
 
-export function GalleryScreen() {
+interface GalleryScreenProps {
+  eventCode: string;
+}
+
+export function GalleryScreen({ eventCode }: GalleryScreenProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedPhotos, setSelectedPhotos] = useState<Set<number>>(new Set());
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  
+  // Backend integration state
+  const [backendPhotos, setBackendPhotos] = useState<ImageListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [useMockData, setUseMockData] = useState(false);
+
+  // Fetch photos from backend
+  const fetchPhotos = useCallback(async () => {
+    if (!eventCode) return;
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const photos = await eventsApi.getImages(eventCode, {
+        limit: 100,
+        offset: 0
+      });
+      setBackendPhotos(photos);
+      setUseMockData(false);
+    } catch (err) {
+      console.error('Failed to fetch photos:', err);
+      const errorMessage = handleApiError(err);
+      setError(errorMessage);
+      // Fall back to mock data if backend is not available
+      setUseMockData(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [eventCode]);
+
+  // Load photos on component mount and when event code changes
+  useEffect(() => {
+    fetchPhotos();
+  }, [fetchPhotos]);
+
+  // Convert backend photos to PhotoData format
+  const displayPhotos: PhotoData[] = useMockData 
+    ? mockPhotos 
+    : backendPhotos.map((photo, index) => ({
+        id: index + 1, // Keep numeric IDs for compatibility
+        uuid: photo.uuid,
+        url: photo.azure_blob_url,
+        faces: photo.faces > 0 ? [
+          { 
+            id: index + 1, 
+            url: photo.azure_blob_url, 
+            confidence: 0.9 
+          }
+        ] : undefined
+      }));
 
   const handlePhotoClick = (photo: PhotoData) => {
+    const photoId = photo.uuid || photo.id.toString();
     if (isSelectionMode) {
       const newSelected = new Set(selectedPhotos);
-      if (newSelected.has(photo.id)) {
-        newSelected.delete(photo.id);
+      if (newSelected.has(photoId)) {
+        newSelected.delete(photoId);
       } else {
-        newSelected.add(photo.id);
+        newSelected.add(photoId);
       }
       setSelectedPhotos(newSelected);
     } else {
@@ -117,17 +175,20 @@ export function GalleryScreen() {
   };
 
   const handleSelectAll = () => {
-    if (selectedPhotos.size === mockPhotos.length) {
+    if (selectedPhotos.size === displayPhotos.length) {
       setSelectedPhotos(new Set());
     } else {
-      setSelectedPhotos(new Set(mockPhotos.map(photo => photo.id)));
+      setSelectedPhotos(new Set(displayPhotos.map(photo => photo.uuid || photo.id.toString())));
     }
   };
 
   const handleDownloadSelected = () => {
     // Placeholder functionality - in a real app, this would trigger actual download
     console.log('Downloading selected photos:', Array.from(selectedPhotos));
-    const selectedPhotoData = mockPhotos.filter(photo => selectedPhotos.has(photo.id));
+    const selectedPhotoData = displayPhotos.filter(photo => {
+      const photoId = photo.uuid || photo.id.toString();
+      return selectedPhotos.has(photoId);
+    });
     selectedPhotoData.forEach(photo => {
       console.log(`Downloading photo ${photo.id}:`, photo.url);
     });
@@ -139,19 +200,25 @@ export function GalleryScreen() {
       <div className="px-3 py-2 border-b border-border bg-background flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h1 className="text-base sm:text-lg">Photos</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base sm:text-lg">Photos</h1>
+              {isLoading && <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />}
+            </div>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              {isSelectionMode 
-                ? `${selectedPhotos.size} of ${mockPhotos.length} selected`
-                : `${mockPhotos.length} photos`
-              }
+              {error ? (
+                <span className="text-red-500">{error}</span>
+              ) : isSelectionMode ? (
+                `${selectedPhotos.size} of ${displayPhotos.length} selected`
+              ) : (
+                `${displayPhotos.length} photos${useMockData ? ' (demo)' : ''}`
+              )}
             </p>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
             {isSelectionMode && (
               <>
                 <Button variant="outline" size="sm" onClick={handleSelectAll} className="text-xs sm:text-sm px-2 sm:px-3">
-                  {selectedPhotos.size === mockPhotos.length ? 'Deselect' : 'Select All'}
+                  {selectedPhotos.size === displayPhotos.length ? 'Deselect' : 'Select All'}
                 </Button>
                 {selectedPhotos.size > 0 && (
                   <Button variant="default" size="sm" onClick={handleDownloadSelected} className="text-xs sm:text-sm px-2 sm:px-3">
@@ -170,6 +237,16 @@ export function GalleryScreen() {
             >
               {isSelectionMode ? 'Done' : 'Select'}
             </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="w-8 h-8 sm:w-9 sm:h-9"
+              onClick={fetchPhotos}
+              disabled={isLoading}
+              title="Refresh photos"
+            >
+              <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
             <Button variant="ghost" size="icon" className="w-8 h-8 sm:w-9 sm:h-9">
               <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
@@ -179,9 +256,30 @@ export function GalleryScreen() {
 
       {/* Photo Grid */}
       <div className="flex-1 overflow-y-auto p-2">
+        {error && !useMockData && (
+          <div className="flex items-center justify-center h-32 text-center">
+            <div className="text-muted-foreground">
+              <AlertCircle className="w-12 h-12 mx-auto mb-2" />
+              <p className="text-sm">{error}</p>
+              <Button variant="outline" size="sm" className="mt-2" onClick={fetchPhotos}>
+                Try Again
+              </Button>
+            </div>
+          </div>
+        )}
+        {displayPhotos.length === 0 && !isLoading && !error && (
+          <div className="flex items-center justify-center h-32 text-center text-muted-foreground">
+            <div>
+              <Camera className="w-12 h-12 mx-auto mb-2" />
+              <p className="text-sm">No photos yet</p>
+              <p className="text-xs">Start capturing photos with the camera</p>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-1">
-          {mockPhotos.map((photo) => {
-            const isSelected = selectedPhotos.has(photo.id);
+          {displayPhotos.map((photo) => {
+            const photoId = photo.uuid || photo.id.toString();
+            const isSelected = selectedPhotos.has(photoId);
             return (
               <div 
                 key={photo.id} 

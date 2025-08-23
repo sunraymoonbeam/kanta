@@ -54,9 +54,26 @@ async def get_running_events(session: AsyncSession) -> List[int]:
     return event_ids
 
 
+async def has_unclustered_faces(session: AsyncSession, event_id: int) -> bool:
+    """
+    Check if an event has any unclustered faces (cluster_id = -2).
+
+    Args:
+        session: Async DB session.
+        event_id: Event ID.
+
+    Returns:
+        True if there are unclustered faces, False otherwise.
+    """
+    query = text("SELECT COUNT(*) FROM faces WHERE event_id = :event_id AND cluster_id = -2")
+    result = await session.execute(query, {"event_id": event_id})
+    count = result.scalar()
+    return count > 0
+
+
 async def get_embeddings(session: AsyncSession, event_id: int) -> List[Tuple[int, Any]]:
     """
-    Fetch face embeddings for a given event.
+    Fetch ALL face embeddings for a given event.
 
     Args:
         session: Async DB session.
@@ -104,6 +121,12 @@ async def run(cfg: DictConfig) -> None:
         logger.info(f"Found {len(event_ids)} running events")
 
         for event_id in tqdm(event_ids, desc="Processing events"):
+            # First check if there are any unclustered faces
+            if not await has_unclustered_faces(session, event_id):
+                logger.info(f"Skipping event {event_id}: no unclustered faces found")
+                continue
+            
+            # If there are unclustered faces, get ALL faces for clustering
             rows = await get_embeddings(session, event_id)
             face_ids = [r[0] for r in rows]
             count = len(face_ids)

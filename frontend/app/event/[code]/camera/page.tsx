@@ -19,13 +19,13 @@ export default function EventCameraApp({ params }: Props) {
   const renderScreen = () => {
     switch (activeScreen) {
       case 'camera':
-        return <CameraScreen />;
+        return <CameraScreen eventCode={code} />;
       case 'gallery':
-        return <GalleryScreen />;
+        return <GalleryScreen eventCode={code} />;
       case 'faces':
-        return <FaceClusteringScreen />;
+        return <FaceClusteringScreen eventCode={code} />;
       default:
-        return <CameraScreen />;
+        return <CameraScreen eventCode={code} />;
     }
   };
 

@@ -1,14 +1,22 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Camera, SwitchCamera, Zap, Settings, X, AlertCircle } from 'lucide-react';
+import { Camera, SwitchCamera, Zap, Settings, X, AlertCircle, Upload, CheckCircle } from 'lucide-react';
 import { Button } from './ui/button';
+import { eventsApi, handleApiError } from '../lib/api';
 
 interface CapturedPhoto {
   id: string;
   dataUrl: string;
   timestamp: number;
+  uploaded?: boolean;
+  uploading?: boolean;
+  uploadError?: string;
 }
 
-export function CameraScreen() {
+interface CameraScreenProps {
+  eventCode: string;
+}
+
+export function CameraScreen({ eventCode }: CameraScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -41,6 +49,53 @@ export function CameraScreen() {
       console.error('Error saving photos to storage:', err);
     }
   }, []);
+
+  // Upload photo to backend
+  const uploadPhoto = useCallback(async (photoId: string, dataUrl: string) => {
+    try {
+      // Update photo state to show uploading
+      setCapturedPhotos(prevPhotos => 
+        prevPhotos.map(photo => 
+          photo.id === photoId 
+            ? { ...photo, uploading: true, uploadError: undefined }
+            : photo
+        )
+      );
+
+      // Convert data URL to blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      
+      // Create file from blob
+      const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      
+      // Upload to backend
+      const uploadResponse = await eventsApi.uploadImage(eventCode, file);
+      
+      // Update photo state to show success
+      setCapturedPhotos(prevPhotos => 
+        prevPhotos.map(photo => 
+          photo.id === photoId 
+            ? { ...photo, uploading: false, uploaded: true }
+            : photo
+        )
+      );
+
+      console.log('Photo uploaded successfully:', uploadResponse);
+    } catch (error) {
+      console.error('Upload error:', error);
+      const errorMessage = handleApiError(error);
+      
+      // Update photo state to show error
+      setCapturedPhotos(prevPhotos => 
+        prevPhotos.map(photo => 
+          photo.id === photoId 
+            ? { ...photo, uploading: false, uploadError: errorMessage }
+            : photo
+        )
+      );
+    }
+  }, [eventCode]);
 
   // Initialize camera stream
   const initializeCamera = useCallback(async () => {
@@ -182,7 +237,7 @@ export function CameraScreen() {
     if (!videoRef.current || !canvasRef.current || !isStreamActive) {
       // Placeholder action when camera is not active
       console.log('Camera capture triggered (placeholder)');
-      alert('Photo capture triggered! (Camera functionality will be implemented)');
+      setError('Camera not active. Please ensure camera permissions are granted and try again.');
       return;
     }
 
@@ -206,7 +261,9 @@ export function CameraScreen() {
     const newPhoto: CapturedPhoto = {
       id: `photo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       dataUrl,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      uploading: false,
+      uploaded: false
     };
 
     // Update photos state and save to storage
@@ -227,10 +284,11 @@ export function CameraScreen() {
       document.body.removeChild(flashOverlay);
     }, 100);
 
-    // Placeholder: Log capture action
-    console.log('Photo captured successfully! (Not sending to backend yet)');
-    alert('Photo captured! (Not sending to backend - placeholder mode)');
-  }, [isStreamActive, capturedPhotos, savePhotosToStorage]);
+    // Automatically upload photo to backend
+    uploadPhoto(newPhoto.id, dataUrl);
+
+    console.log('Photo captured and upload started for event:', eventCode);
+  }, [isStreamActive, capturedPhotos, savePhotosToStorage, uploadPhoto, eventCode]);
 
   // Request camera permission
   const requestPermission = useCallback(() => {
@@ -353,12 +411,28 @@ export function CameraScreen() {
         {/* Gallery Preview */}
         <div className="absolute right-6">
           {capturedPhotos.length > 0 ? (
-            <div className="w-12 h-12 rounded-lg border-2 border-white/30 overflow-hidden">
+            <div className="relative w-12 h-12 rounded-lg border-2 border-white/30 overflow-hidden">
               <img 
                 src={capturedPhotos[0].dataUrl} 
                 alt="Latest capture" 
                 className="w-full h-full object-cover"
               />
+              {/* Upload status indicator */}
+              {capturedPhotos[0].uploading && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <Upload className="w-3 h-3 text-white animate-pulse" />
+                </div>
+              )}
+              {capturedPhotos[0].uploaded && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-3 h-3 text-white" />
+                </div>
+              )}
+              {capturedPhotos[0].uploadError && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                  <X className="w-3 h-3 text-white" />
+                </div>
+              )}
             </div>
           ) : (
             <div className="w-12 h-12 rounded-lg bg-gray-600 border-2 border-white/30 overflow-hidden">

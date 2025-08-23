@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, RefreshCw, AlertCircle, Users } from 'lucide-react';
 import { Button } from './ui/button';
+import { eventsApi, handleApiError, type ClusterInfo } from '../lib/api';
 
 // Mock face clustering data
 const mockFaceClusters = [
@@ -85,34 +86,121 @@ const mockFaceClusters = [
 
 const totalFaces = mockFaceClusters.reduce((sum, cluster) => sum + cluster.faceCount, 0);
 
-export function FaceClusteringScreen() {
+interface FaceClusteringScreenProps {
+  eventCode: string;
+}
+
+export function FaceClusteringScreen({ eventCode }: FaceClusteringScreenProps) {
+  // Backend integration state
+  const [backendClusters, setBackendClusters] = useState<ClusterInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [useMockData, setUseMockData] = useState(false);
+
+  // Fetch clusters from backend
+  const fetchClusters = useCallback(async () => {
+    if (!eventCode) return;
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const clusters = await eventsApi.getClusters(eventCode);
+      setBackendClusters(clusters);
+      setUseMockData(false);
+    } catch (err) {
+      console.error('Failed to fetch clusters:', err);
+      const errorMessage = handleApiError(err);
+      setError(errorMessage);
+      // Fall back to mock data if backend is not available
+      setUseMockData(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [eventCode]);
+
+  // Load clusters on component mount and when event code changes
+  useEffect(() => {
+    fetchClusters();
+  }, [fetchClusters]);
+
+  // Use either backend data or mock data
+  const displayClusters = useMockData ? mockFaceClusters : backendClusters.map(cluster => ({
+    id: cluster.cluster_id,
+    personName: `Person ${cluster.cluster_id}`,
+    faceCount: cluster.face_count,
+    faces: cluster.samples?.slice(0, 3).map(sample => sample.sample_blob_url) || []
+  }));
+
+  const totalFacesCount = displayClusters.reduce((sum, cluster) => sum + cluster.faceCount, 0);
+
   return (
     <div className="h-full bg-background flex flex-col">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border bg-background">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg">Faces</h1>
-            <p className="text-sm text-muted-foreground">{totalFaces} faces detected</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg">Faces</h1>
+              {isLoading && <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {error ? (
+                <span className="text-red-500">{error}</span>
+              ) : (
+                `${totalFacesCount} faces detected${useMockData ? ' (demo)' : ''}`
+              )}
+            </p>
           </div>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={fetchClusters}
+              disabled={isLoading}
+              title="Refresh clusters"
+            >
+              <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Face Count Banner */}
       <div className="px-4 py-3 bg-accent/50">
         <div className="text-center">
-          <div className="text-2xl font-medium text-foreground">{totalFaces}</div>
+          <div className="text-2xl font-medium text-foreground">{totalFacesCount}</div>
           <div className="text-sm text-muted-foreground">faces found</div>
         </div>
       </div>
 
       {/* Face Clusters */}
       <div className="flex-1 overflow-y-auto p-4">
+        {error && !useMockData && (
+          <div className="flex items-center justify-center h-32 text-center">
+            <div className="text-muted-foreground">
+              <AlertCircle className="w-12 h-12 mx-auto mb-2" />
+              <p className="text-sm">{error}</p>
+              <Button variant="outline" size="sm" className="mt-2" onClick={fetchClusters}>
+                Try Again
+              </Button>
+            </div>
+          </div>
+        )}
+        {displayClusters.length === 0 && !isLoading && !error && (
+          <div className="flex items-center justify-center h-32 text-center text-muted-foreground">
+            <div>
+              <Users className="w-12 h-12 mx-auto mb-2" />
+              <p className="text-sm">No face clusters yet</p>
+              <p className="text-xs">Faces will appear here after photos are processed</p>
+            </div>
+          </div>
+        )}
         <div className="space-y-6">
-          {mockFaceClusters.map((cluster) => (
+          {displayClusters.map((cluster) => (
             <div key={cluster.id} className="space-y-3">
               {/* Cluster Header */}
               <div className="flex items-center justify-between">

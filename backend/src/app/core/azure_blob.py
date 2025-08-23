@@ -58,7 +58,7 @@ async def get_event_container(
     event_code: str = Path(
         ...,
         description="Event code; also used as Azure container name",
-        pattern=r"^[a-zA-Z0-9_]+$",
+        pattern=r"^[a-zA-Z0-9_-]+$",
     ),
     blob_service: BlobServiceClient = Depends(get_blob_service),
 ) -> ContainerClient:

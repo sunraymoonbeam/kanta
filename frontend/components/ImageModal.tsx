@@ -6,6 +6,7 @@ import { Download } from 'lucide-react';
 
 export interface PhotoData {
   id: number;
+  uuid?: string;
   url: string;
   faces?: Array<{
     id: number;
