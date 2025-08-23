@@ -32,7 +32,7 @@ The backend API should be accessible at `http://localhost:8000`.
 
 ### Basic Usage
 
-Run the seed script with default settings:
+Run the seed script with batched and delay settings:
 
 ```bash
 uv run main.py --batch-size 5 --delay 0.5
